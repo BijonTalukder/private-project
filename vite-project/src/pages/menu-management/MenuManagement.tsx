@@ -128,7 +128,7 @@ const MenuManagement = () => {
         setIsModalOpen(true);
     };
 
-    const openCreateChildModal = (parentId: string) => {
+    const openCreateChildModal = (parentId: string | null) => {
         setEditingMenu(null);
         setParentMenuId(parentId);
         form.resetFields();
