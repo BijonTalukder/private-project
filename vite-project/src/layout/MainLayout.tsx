@@ -1,18 +1,16 @@
 import { Outlet, useNavigate } from "react-router-dom"
 import Header from "../components/header/Header"
-import { useGetAllMenuQuery } from "../api/services/menu/menuApi";
+import { useGetAllMenusQuery } from "../api/services/menu/menuApi";
 import { Input, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { usePermissions } from "../hooks/usePermissions";
 
 const MainLayout = () => {
-    const { data, isLoading, error } = useGetAllMenuQuery();
+    const { data, isLoading, error } = useGetAllMenusQuery();
 
     const navigate = useNavigate()
     const permissions = usePermissions();
-    console.log(data)
     const handleMenuItemClick = (key: string, item: any) => {
-        console.log("Menu clicked:", key, item);
 
         // Navigate based on menu key
         // Example: "order.create" -> "/order/create"
@@ -55,7 +53,7 @@ const MainLayout = () => {
                     menuData={data || []}
                     onMenuItemClick={handleMenuItemClick}
                 >
-                    <Input
+                    {/* <Input
                         placeholder="Search anything..."
                         prefix={<SearchOutlined style={{ color: "#667eea" }} />}
                         style={{
@@ -63,7 +61,7 @@ const MainLayout = () => {
                             height: "38px",
                             borderRadius: "6px"
                         }}
-                    />
+                    /> */}
                 </Header>
 
             </div>

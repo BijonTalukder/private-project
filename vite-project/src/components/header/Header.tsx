@@ -18,6 +18,7 @@ interface MenuItem {
     name: string;
     key: string;
     parent: string | null;
+    level: number;
     children?: MenuItem[];
     createdAt: string;
     updatedAt: string;
@@ -31,7 +32,7 @@ interface HeaderProps {
     showSettings?: boolean;
     showNotifications?: boolean;
     showMenu?: boolean;
-    menuData?: MenuItem[]; // Menu data from backend
+    menuData?: MenuItem[];
     onMenuClick?: () => void;
     onMenuItemClick?: (key: string, item: MenuItem) => void;
 }
@@ -49,12 +50,11 @@ const Header = ({
     onMenuItemClick
 }: HeaderProps) => {
     const navigate = useNavigate();
-    // const [logout, { isLoading }] = useLogoutMutation();
-    const isLoading = false
+    const isLoading = false;
     const permissions = usePermissions();
+
     const handleLogout = async () => {
         try {
-            // await logout({}).unwrap();
             message.success("Logged out successfully!");
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
@@ -67,30 +67,19 @@ const Header = ({
         }
     };
 
-    // Convert menu data to Ant Design Menu format
+    // Recursive function to convert menu items to Ant Design Menu format
     const convertToAntdMenu = (menuItems: MenuItem[]): MenuProps['items'] => {
         return menuItems.map(item => {
-            // If item has children, create submenu
+            // If item has children, create submenu recursively
             if (item.children && item.children.length > 0) {
                 return {
                     key: item.key,
                     label: item.name,
-                    children: item.children.map(child => ({
-                        key: child.key,
-                        label: child.name,
-                        onClick: () => {
-                            if (onMenuItemClick) {
-                                onMenuItemClick(child.key, child);
-                            } else {
-                                // Default navigation based on key
-                                navigate(`/${child.key.replace('.', '/')}`);
-                            }
-                        }
-                    }))
+                    children: convertToAntdMenu(item.children), // Recursive call
                 };
             }
 
-            // Single menu item without children
+            // Leaf node - clickable menu item
             return {
                 key: item.key,
                 label: item.name,
@@ -98,14 +87,18 @@ const Header = ({
                     if (onMenuItemClick) {
                         onMenuItemClick(item.key, item);
                     } else {
-                        navigate(`/${item.key}`);
+                        // Default navigation
+                        navigate(`/${item.key.replace(/\./g, '/')}`);
                     }
                 }
             };
         });
     };
 
-    const menuItems = convertToAntdMenu(menuData);
+    // Check if menu item has any children (at any level)
+    const hasChildren = (item: MenuItem): boolean => {
+        return !!(item.children && item.children.length > 0);
+    };
 
     return (
         <div style={{
@@ -173,26 +166,17 @@ const Header = ({
                     </p>
                 </div>
 
-                {/* Navigation Menu with Dropdowns */}
+                {/* Navigation Menu with N-Level Dropdowns */}
                 {menuData.length > 0 && (
                     <div style={{ marginLeft: "30px" }}>
                         <Space size="middle">
                             {menuData.map(item => {
-
+                                // Permission check (uncomment if needed)
                                 // if (!hasPermission(permissions, item.key, "read")) return null;
-                                // If has children, show as dropdown
-                                if (item.children && item.children.length > 0) {
-                                    const dropdownItems: MenuProps['items'] = item.children.map(child => ({
-                                        key: child.key,
-                                        label: child.name,
-                                        onClick: () => {
-                                            if (onMenuItemClick) {
-                                                onMenuItemClick(child.key, child);
-                                            } else {
-                                                navigate(`/${child.key.replace('.', '/')}`);
-                                            }
-                                        }
-                                    }));
+
+                                // If has children (at any level), show as dropdown
+                                if (hasChildren(item)) {
+                                    const dropdownItems = convertToAntdMenu(item.children!);
 
                                     return (
                                         <Dropdown
@@ -217,7 +201,7 @@ const Header = ({
                                     );
                                 }
 
-                                // Single menu item without children
+                                // Single menu item without children (leaf node at root level)
                                 return (
                                     <Button
                                         key={item.key}
@@ -225,7 +209,7 @@ const Header = ({
                                             if (onMenuItemClick) {
                                                 onMenuItemClick(item.key, item);
                                             } else {
-                                                // navigate(`/${item.key}`);
+                                                navigate(`/${item.key.replace(/\./g, '/')}`);
                                             }
                                         }}
                                         style={{

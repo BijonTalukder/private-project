@@ -43,14 +43,14 @@ import {
     type Role,
     type Permission
 } from "../../api/services/admin/adminApi";
-import { useGetAllMenuQuery, type MenuItem } from "../../api/services/menu/menuApi";
+import { useGetAllMenusQuery, type MenuItem } from "../../api/services/menu/menuApi";
 import { useCreateRoleMutation, useGetAllRolesQuery, useUpdateRoleMutation } from "../../api/services/role/roleApi";
 
 const AdminManagement = () => {
     // RTK Query hooks
     const { data: admins = [], isLoading: adminsLoading, refetch: refetchAdmins } = useGetAllAdminsQuery();
     const { data: roles = [], isLoading: rolesLoading, refetch: refetchRoles } = useGetAllRolesQuery();
-    const { data: menus = [], isLoading: menusLoading } = useGetAllMenuQuery();
+    const { data: menus = [], isLoading: menusLoading } = useGetAllMenusQuery();
 
     const [createAdmin, { isLoading: isCreatingAdmin }] = useCreateAdminMutation();
     const [updateAdmin, { isLoading: isUpdatingAdmin }] = useUpdateAdminMutation();

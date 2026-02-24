@@ -3,14 +3,13 @@ import Login from './pages/login/Login'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import MainLayout from './layout/MainLayout'
 import MenuManagementWithRTK from './pages/menu-management/MenuManagement'
-import { useGetAllMenuQuery } from './api/services/menu/menuApi'
+import { useGetAllMenusQuery } from './api/services/menu/menuApi'
 import RequireAuth from './auth/RequireAuth'
 import { generateRoutes } from './routes/DynamicRoutes'
 
 function App() {
-  const { data } = useGetAllMenuQuery();
+  const { data } = useGetAllMenusQuery();
 
-  console.log(data, "menu from api")
   return (
     <BrowserRouter>
       <Routes>

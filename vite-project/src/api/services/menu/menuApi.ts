@@ -1,74 +1,60 @@
 import { baseApi } from "../baseApi";
+
 export interface MenuItem {
     _id: string;
     name: string;
     key: string;
     parent: string | null;
+    level: number;
+    order: number;
     children?: MenuItem[];
     createdAt: string;
     updatedAt: string;
 }
-export interface CreateMenuWithChildrenDto {
+
+export interface CreateMenuDto {
     name: string;
     key: string;
-    children?: Array<{
-        name: string;
-        key: string;
-    }>;
+    parent?: string | null;
+    order?: number;
 }
+
 export interface UpdateMenuDto {
     name?: string;
     key?: string;
+    parent?: string | null;
+    order?: number;
 }
+
 export const menuApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
-        getAllMenu: build.query<any, void>({
-            query: () => ({
-                url: "/admin/menu/all",
-                method: "GET",
-            }),
+        getAllMenus: build.query<MenuItem[], void>({
+            query: () => ({ url: '/admin/menus/all', method: 'GET' }),
+            // providesTags: ['Menu'],
         }),
         getMenuById: build.query<MenuItem, string>({
-            query: (id) => ({
-                url: `/admin/menus/${id}`,
-                method: "GET"
-            }),
-            // providesTags: (_result, _error, id) => [{ type: 'Menu', id }]
+            query: (id) => ({ url: `/admin/menus/single/${id}`, method: 'GET' }),
+            // providesTags: (_r, _e, id) => [{ type: 'Menu', id }],
         }),
-        createMenuWithChildren: build.mutation<MenuItem, CreateMenuWithChildrenDto>({
-            query: (data) => ({
-                url: '/admin/menu',
-                method: "POST",
-                data
-            }),
-            // invalidatesTags: ['Menu']
+        createMenu: build.mutation<MenuItem, CreateMenuDto>({
+            query: (data) => ({ url: '/admin/menus', method: 'POST', data }),
+            // invalidatesTags: ['Menu'],
         }),
         updateMenu: build.mutation<MenuItem, { id: string; data: UpdateMenuDto }>({
-            query: ({ id, data }) => ({
-                url: `/admin/menus/${id}`,
-                method: "PATCH",
-                data
-            }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'Menu',
-            //     { type: 'Menu', id }
-            // ]
+            query: ({ id, data }) => ({ url: `/admin/menus/update/${id}`, method: 'PATCH', data }),
+            // invalidatesTags: ['Menu'],
         }),
-        deleteMenu: build.mutation<{ message: string }, string>({
-            query: (id) => ({
-                url: `/admin/menus/${id}`,
-                method: "DELETE"
-            }),
-            // invalidatesTags: ['Menu']
-        })
-
+        deleteMenu: build.mutation<{ message: string; deletedCount: number }, string>({
+            query: (id) => ({ url: `/admin/menus/delete/${id}`, method: 'DELETE' }),
+            // invalidatesTags: ['Menu'],
+        }),
     }),
-    // overrideExisting: false,
 });
 
-export const { useGetAllMenuQuery,
+export const {
+    useGetAllMenusQuery,
     useGetMenuByIdQuery,
-    useCreateMenuWithChildrenMutation,
+    useCreateMenuMutation,
     useUpdateMenuMutation,
-    useDeleteMenuMutation
+    useDeleteMenuMutation,
 } = menuApi;

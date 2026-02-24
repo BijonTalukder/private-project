@@ -1,44 +1,47 @@
-import { IsArray, IsMongoId, IsOptional, IsString, Matches, ValidateNested } from "class-validator";
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsMongoId, IsNumber, Min } from 'class-validator';
 
-export class CreateSubMenuDto {
+export class CreateMenuDto {
     @IsString()
     name: string;
 
     @IsString()
-    @Matches(/^[a-zA-Z0-9._-]+$/)
     key: string;
+
+    @IsOptional()
+    @IsMongoId()
+    parent?: string | null;
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    level?: number;
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    order?: number;
 }
 
-export class CreateMenuWithChildrenDto {
+export class UpdateMenuDto {
+    @IsOptional()
     @IsString()
-    name: string;
+    name?: string;
 
+    @IsOptional()
     @IsString()
-    @Matches(/^[a-zA-Z0-9._-]+$/)
-    key: string;
+    key?: string;
 
+    @IsOptional()
     @IsMongoId()
-    @IsOptional()
-    parent?: string;
+    parent?: string | null;
 
     @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => CreateSubMenuDto)
-    children?: CreateSubMenuDto[];
-}
+    @IsNumber()
+    @Min(0)
+    level?: number;
 
-export class CreateMenu {
-    @IsString()
-    name: string;
-
-    @IsString()
-    @Matches(/^[a-zA-Z0-9._-]+$/)
-    key: string;
-
-    @IsMongoId()
     @IsOptional()
-    parent: string
-
+    @IsNumber()
+    @Min(0)
+    order?: number;
 }
