@@ -4,7 +4,7 @@ import { axiosBaseQuery } from '../axiosBaseQuery';
 // 'https://private-project-ur1i.onrender.com
 export const baseApi = createApi({
     reducerPath: 'api',
-    baseQuery: axiosBaseQuery({ baseUrl: 'http://localhost:3000' }),
+    baseQuery: axiosBaseQuery({ baseUrl: 'https://private-project-ur1i.onrender.com' }),
     endpoints: (builder) => ({
 
     }),
