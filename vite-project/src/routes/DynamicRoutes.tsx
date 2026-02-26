@@ -4,40 +4,35 @@ import { componentMap } from "./componentMap";
 export const generateRoutes = (menus: any[]) => {
     const routes: any[] = [];
 
-    menus.forEach((menu) => {
-
-        const parentComponent = componentMap[menu.key];
-
-        if (parentComponent) {
-            const ParentComp = parentComponent;
-            const parentPath = menu.key.replace(/\./g, "/");
+    // Recursive function to handle n-level nested menus
+    const processMenu = (menu: any) => {
+        // Only process if menu has a key and corresponding component
+        if (menu.key && componentMap[menu.key]) {
+            const Component = componentMap[menu.key];
+            const path = menu.key.replace(/\./g, "/");
 
             routes.push(
                 <Route
                     key={menu.key}
-                    path={`/${parentPath}`}
-                    element={<ParentComp />}
+                    path={`/${path}`}
+                    element={<Component />}
                 />
             );
         }
 
-        menu.children?.forEach((child: any) => {
-            const component = componentMap[child.key];
+        // Recursively process children
+        if (menu.children && Array.isArray(menu.children)) {
+            menu.children.forEach((child: any) => {
+                processMenu(child); // Recursive call
+            });
+        }
+    };
 
-            if (!component) return;
-
-            const Comp = component;
-            const path = child.key.replace(/\./g, "/");
-
-            routes.push(
-                <Route
-                    key={child.key}
-                    path={`/${path}`}
-                    element={<Comp />}
-                />
-            );
-        });
+    // Process all root menus
+    menus.forEach((menu) => {
+        processMenu(menu);
     });
 
+    console.log("Generated routes:", routes.length);
     return routes;
 };

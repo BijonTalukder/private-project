@@ -7,7 +7,7 @@ import {
     MenuOutlined,
     DownOutlined
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import type { MenuProps } from 'antd';
 import { usePermissions } from "../../hooks/usePermissions";
@@ -129,24 +129,27 @@ const Header = ({
                     />
                 )}
 
-                <div style={{
-                    width: "45px",
-                    height: "45px",
-                    background: "#667eea",
-                    borderRadius: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 2px 8px rgba(102, 126, 234, 0.4)"
-                }}>
-                    <span style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        color: "#fff"
+                <Link to={'/'}>
+                    <div style={{
+                        width: "45px",
+                        height: "45px",
+                        background: "#667eea",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 2px 8px rgba(102, 126, 234, 0.4)"
                     }}>
-                        A
-                    </span>
-                </div>
+                        <span style={{
+                            fontSize: "24px",
+                            fontWeight: "bold",
+                            color: "#fff"
+                        }}>
+                            A
+                        </span>
+                    </div></Link>
+
+
 
                 <div>
                     <h2 style={{
