@@ -156,12 +156,15 @@ export class DeliveryChallanService {
             isActive: dto.isActive ?? true,
         });
 
+        // console.log(challan, challan._id)
+
         // Create challan items
         const challanItems = itemsToCreate.map((item) => ({
             ...item,
             invoiceItemId: new Types.ObjectId(item.invoiceItemId),
             challanId: challan._id,
         }));
+        console.log(challanItems)
         await this.challanItemModel.insertMany(challanItems);
 
         // Return with full data
@@ -197,7 +200,7 @@ export class DeliveryChallanService {
             // Lookup challan items
             {
                 $lookup: {
-                    from: 'deliverychalanitems',
+                    from: 'deliverychallanitems',
                     localField: '_id',
                     foreignField: 'challanId',
                     as: 'items',
