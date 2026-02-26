@@ -6,6 +6,7 @@ import { AdministratorModule } from './modules/administrator/administrator.modul
 import { SchemaLoaderModule } from './lib/schemas/schema-loader/schema-loader.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { JwtModule } from '@nestjs/jwt';
         expiresIn: '120d',
       },
     }),
+    ScheduleModule.forRoot(),
     SchemaLoaderModule,
     DatabaseModule.register(),
 

@@ -39,7 +39,7 @@ export class CronJobService {
 
             this.logger.log('✅ All APIs hit successfully');
 
-            return { success: true };
+            // return { success: true };
         } catch (error: any) {
             this.logger.error(`❌ API hit failed: ${error.message}`, error.stack);
 
