@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface PopulatedColor {
     _id: string;
@@ -53,7 +53,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: '/admin/finish-goods/all',
                 method: "GET"
             }),
-            // providesTags: ['FinishGoods']
+            providesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         getActiveFinishGoods: build.query<FinishGoods[], void>({
@@ -61,7 +61,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: '/admin/finish-goods/active',
                 method: "GET"
             }),
-            // providesTags: ['FinishGoods']
+            providesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         searchFinishGoods: build.query<FinishGoods[], string>({
@@ -69,7 +69,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/search?q=${searchQuery}`,
                 method: "GET"
             }),
-            // providesTags: ['FinishGoods']
+            providesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         getFinishGoodsByColor: build.query<FinishGoods[], string>({
@@ -77,7 +77,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/by-color/${colorId}`,
                 method: "GET"
             }),
-            // providesTags: ['FinishGoods']
+            providesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         getFinishGoodsByGSM: build.query<FinishGoods[], string>({
@@ -85,7 +85,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/by-gsm/${gsmId}`,
                 method: "GET"
             }),
-            // providesTags: ['FinishGoods']
+            providesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         getFinishGoodsById: build.query<FinishGoods, string>({
@@ -93,7 +93,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/single/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'FinishGoods', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.FINISH_GOODS, id }]
         }),
 
         createFinishGoods: build.mutation<FinishGoods, CreateFinishGoodsDto>({
@@ -102,7 +102,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['FinishGoods']
+            invalidatesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         updateFinishGoods: build.mutation<FinishGoods, { id: string; data: UpdateFinishGoodsDto }>({
@@ -111,10 +111,10 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'FinishGoods',
-            //     { type: 'FinishGoods', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.FINISH_GOODS,
+                { type: TAG_TYPES.FINISH_GOODS, id }
+            ]
         }),
 
         deleteFinishGoods: build.mutation<{ message: string }, string>({
@@ -122,7 +122,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['FinishGoods']
+            invalidatesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
         toggleFinishGoodsStatus: build.mutation<FinishGoods, string>({
@@ -130,7 +130,7 @@ export const finishGoodsApi = baseApi.injectEndpoints({
                 url: `/admin/finish-goods/${id}/toggle-status`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['FinishGoods']
+            invalidatesTags: [TAG_TYPES.FINISH_GOODS]
         })
     })
 });

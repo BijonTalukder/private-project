@@ -24,6 +24,8 @@ import type { InvoiceFilters } from "./InvoiceListFilters";
 import InvoiceListFilters from "./InvoiceListFilters";
 import InvoiceFormModal from "../modal/InvoiceFormModal";
 import InvoiceViewModal from "./InvoiceViewModal";
+import InvoicePrintModal from "../print-invoice/InvoicePrintModal";
+import { getCurrencyConfig } from "../../../utils/currencyUtils";
 
 const InvoiceListPage = () => {
     // ── RTK Query ──────────────────────────────────────────────────────────────
@@ -35,6 +37,7 @@ const InvoiceListPage = () => {
     const { data: finishGoods = [] } = useGetAllFinishGoodsQuery();
     const { data: priceLists = [] } = useGetAllPriceListsQuery();
     const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
+    const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
 
     // ── Local State ────────────────────────────────────────────────────────────
     const [filters, setFilters] = useState<InvoiceFilters>({});
@@ -92,127 +95,128 @@ const InvoiceListPage = () => {
     };
 
     const handlePrint = (invoice: Invoice) => {
+        setPrintingInvoice(invoice)
         // Create print window with invoice data
-        const printWindow = window.open("", "_blank");
-        if (!printWindow) {
-            message.error("Please allow popups to print");
-            return;
-        }
+        // const printWindow = window.open("", "_blank");
+        // if (!printWindow) {
+        //     message.error("Please allow popups to print");
+        //     return;
+        // }
 
-        const itemsHtml = invoice.items
-            .map(
-                (item, idx) => `
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${idx + 1}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.finishGoods.articleNo}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.priceList.supplierId.supplierName}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${item.invoiceQty}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.unitPrice.toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.commission.toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.price.toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">$${item.amount.toFixed(2)}</td>
-            </tr>
-        `
-            )
-            .join("");
+        // const itemsHtml = invoice.items
+        //     .map(
+        //         (item, idx) => `
+        //     <tr>
+        //         <td style="border: 1px solid #ddd; padding: 8px;">${idx + 1}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px;">${item.finishGoods.articleNo}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px;">${item.priceList.supplierId.supplierName}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${item.invoiceQty}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.unitPrice.toFixed(2)}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.commission.toFixed(2)}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.price.toFixed(2)}</td>
+        //         <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">$${item.amount.toFixed(2)}</td>
+        //     </tr>
+        // `
+        //     )
+        //     .join("");
 
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Invoice - ${invoice.invoiceNo}</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 40px; }
-                    h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
-                    .header { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-                    .section { background: #f7fafc; padding: 15px; border-radius: 8px; }
-                    .section-title { font-weight: bold; color: #2d3748; margin-bottom: 10px; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th { background: #667eea; color: white; padding: 10px; text-align: left; }
-                    .totals { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
-                    .totals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-                    @media print { body { padding: 20px; } }
-                </style>
-            </head>
-            <body>
-                <h1>INVOICE</h1>
-                
-                <div class="header">
-                    <div class="section">
-                        <div class="section-title">Invoice Information</div>
-                        <div><strong>Invoice No:</strong> ${invoice.invoiceNo}</div>
-                        <div><strong>Invoice ID:</strong> ${invoice.invoiceId}</div>
-                        <div><strong>Date:</strong> ${dayjs(invoice.createdAt).format("DD MMM YYYY")}</div>
-                        <div><strong>Status:</strong> ${invoice.isActive ? "Approved" : "Unapproved"}</div>
-                    </div>
-                    
-                    <div class="section">
-                        <div class="section-title">Client Information</div>
-                        <div><strong>Name:</strong> ${invoice.client.name}</div>
-                        <div><strong>Contact:</strong> ${invoice.client.contactNo}</div>
-                        <div><strong>Email:</strong> ${invoice.client.email}</div>
-                    </div>
-                </div>
+        // printWindow.document.write(`
+        //     <!DOCTYPE html>
+        //     <html>
+        //     <head>
+        //         <title>Invoice - ${invoice.invoiceNo}</title>
+        //         <style>
+        //             body { font-family: Arial, sans-serif; padding: 40px; }
+        //             h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        //             .header { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        //             .section { background: #f7fafc; padding: 15px; border-radius: 8px; }
+        //             .section-title { font-weight: bold; color: #2d3748; margin-bottom: 10px; }
+        //             table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        //             th { background: #667eea; color: white; padding: 10px; text-align: left; }
+        //             .totals { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        //             .totals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        //             @media print { body { padding: 20px; } }
+        //         </style>
+        //     </head>
+        //     <body>
+        //         <h1>INVOICE</h1>
 
-                <div class="header">
-                    <div class="section">
-                        <div class="section-title">Payment Details</div>
-                        <div><strong>Currency:</strong> ${invoice.currency.name}</div>
-                        <div><strong>Payment Method:</strong> ${invoice.payment.name}</div>
-                    </div>
-                    
-                    <div class="section">
-                        <div class="section-title">Bank Details</div>
-                        <div><strong>Bank:</strong> ${invoice.bank.name}</div>
-                        <div><strong>Branch:</strong> ${invoice.bank.branchName}</div>
-                        <div><strong>Account:</strong> ${invoice.bank.accountName}</div>
-                    </div>
-                </div>
+        //         <div class="header">
+        //             <div class="section">
+        //                 <div class="section-title">Invoice Information</div>
+        //                 <div><strong>Invoice No:</strong> ${invoice.invoiceNo}</div>
+        //                 <div><strong>Invoice ID:</strong> ${invoice.invoiceId}</div>
+        //                 <div><strong>Date:</strong> ${dayjs(invoice.createdAt).format("DD MMM YYYY")}</div>
+        //                 <div><strong>Status:</strong> ${invoice.isActive ? "Approved" : "Unapproved"}</div>
+        //             </div>
 
-                <h2>Line Items</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="border: 1px solid #ddd; padding: 10px;">#</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">Finish Good</th>
-                            <th style="border: 1px solid #ddd; padding: 10px;">Supplier</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Qty</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Unit Price</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Commission</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Price</th>
-                            <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${itemsHtml}
-                    </tbody>
-                </table>
+        //             <div class="section">
+        //                 <div class="section-title">Client Information</div>
+        //                 <div><strong>Name:</strong> ${invoice.client.name}</div>
+        //                 <div><strong>Contact:</strong> ${invoice.client.contactNo}</div>
+        //                 <div><strong>Email:</strong> ${invoice.client.email}</div>
+        //             </div>
+        //         </div>
 
-                <div class="totals">
-                    <div class="totals-grid">
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">Total Quantity</div>
-                            <div style="font-size: 24px; font-weight: bold;">${invoice.totalQty}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">Total Commission</div>
-                            <div style="font-size: 24px; font-weight: bold;">$${invoice.totalCommissionAmount.toFixed(2)}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">Total Amount</div>
-                            <div style="font-size: 28px; font-weight: bold;">$${invoice.totalAmount.toFixed(2)}</div>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `);
+        //         <div class="header">
+        //             <div class="section">
+        //                 <div class="section-title">Payment Details</div>
+        //                 <div><strong>Currency:</strong> ${invoice.currency.name}</div>
+        //                 <div><strong>Payment Method:</strong> ${invoice.payment.name}</div>
+        //             </div>
 
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-            printWindow.print();
-        }, 250);
+        //             <div class="section">
+        //                 <div class="section-title">Bank Details</div>
+        //                 <div><strong>Bank:</strong> ${invoice.bank.name}</div>
+        //                 <div><strong>Branch:</strong> ${invoice.bank.branchName}</div>
+        //                 <div><strong>Account:</strong> ${invoice.bank.accountName}</div>
+        //             </div>
+        //         </div>
+
+        //         <h2>Line Items</h2>
+        //         <table>
+        //             <thead>
+        //                 <tr>
+        //                     <th style="border: 1px solid #ddd; padding: 10px;">#</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px;">Finish Good</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px;">Supplier</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Qty</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Unit Price</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Commission</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Price</th>
+        //                     <th style="border: 1px solid #ddd; padding: 10px; text-align: right;">Amount</th>
+        //                 </tr>
+        //             </thead>
+        //             <tbody>
+        //                 ${itemsHtml}
+        //             </tbody>
+        //         </table>
+
+        //         <div class="totals">
+        //             <div class="totals-grid">
+        //                 <div>
+        //                     <div style="font-size: 12px; opacity: 0.9;">Total Quantity</div>
+        //                     <div style="font-size: 24px; font-weight: bold;">${invoice.totalQty}</div>
+        //                 </div>
+        //                 <div>
+        //                     <div style="font-size: 12px; opacity: 0.9;">Total Commission</div>
+        //                     <div style="font-size: 24px; font-weight: bold;">$${invoice.totalCommissionAmount.toFixed(2)}</div>
+        //                 </div>
+        //                 <div>
+        //                     <div style="font-size: 12px; opacity: 0.9;">Total Amount</div>
+        //                     <div style="font-size: 28px; font-weight: bold;">$${invoice.totalAmount.toFixed(2)}</div>
+        //                 </div>
+        //             </div>
+        //         </div>
+        //     </body>
+        //     </html>
+        // `);
+
+        // printWindow.document.close();
+        // printWindow.focus();
+        // setTimeout(() => {
+        //     printWindow.print();
+        // }, 250);
     };
 
     const handleUpdate = async (values: any) => {
@@ -285,19 +289,27 @@ const InvoiceListPage = () => {
             render: (qty) => <span style={{ fontFamily: "monospace", fontWeight: "500" }}>{qty}</span>,
         },
         {
-            title: "Total Amount",
+            title: "Amount",
             dataIndex: "totalAmount",
             key: "totalAmount",
             align: "right",
-            width: 140,
-            render: (amount) => (
-                <Space>
-                    <DollarOutlined style={{ color: "#667eea" }} />
-                    <span style={{ fontWeight: "700", fontSize: "14px", color: "#667eea", fontFamily: "monospace" }}>
-                        {Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            width: 150,
+            render: (_, record) => {
+
+                const currencyConfig = getCurrencyConfig(record.currency.name);
+
+                return <Space>
+
+                    {/* <DollarOutlined style={{ color: "#667eea" }} /> */}
+                    <span style={{ fontWeight: "700", fontSize: "15px", color: "#667eea", fontFamily: "monospace" }}>
+                        {currencyConfig.symbol}  {Number(record.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </span>
                 </Space>
-            ),
+
+
+            }
+
+            ,
         },
         {
             title: "Status",
@@ -443,6 +455,11 @@ const InvoiceListPage = () => {
                 invoice={viewingInvoice}
                 open={!!viewingInvoice}
                 onClose={() => setViewingInvoice(null)}
+            />
+            <InvoicePrintModal
+                invoice={printingInvoice}
+                open={!!printingInvoice}
+                onClose={() => setPrintingInvoice(null)}
             />
 
             {/* Edit Modal */}

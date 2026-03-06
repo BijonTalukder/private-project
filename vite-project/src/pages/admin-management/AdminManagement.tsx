@@ -33,12 +33,10 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import {
     useGetAllAdminsQuery,
-
     useCreateAdminMutation,
     useUpdateAdminMutation,
     useDeleteAdminMutation,
     useToggleAdminStatusMutation,
-
     type Admin,
     type Role,
     type Permission
@@ -47,7 +45,6 @@ import { useGetAllMenusQuery, type MenuItem } from "../../api/services/menu/menu
 import { useCreateRoleMutation, useGetAllRolesQuery, useUpdateRoleMutation } from "../../api/services/role/roleApi";
 
 const AdminManagement = () => {
-    // RTK Query hooks
     const { data: admins = [], isLoading: adminsLoading, refetch: refetchAdmins } = useGetAllAdminsQuery();
     const { data: roles = [], isLoading: rolesLoading, refetch: refetchRoles } = useGetAllRolesQuery();
     const { data: menus = [], isLoading: menusLoading } = useGetAllMenusQuery();
@@ -60,7 +57,6 @@ const AdminManagement = () => {
     const [createRole, { isLoading: isCreatingRole }] = useCreateRoleMutation();
     const [updateRole, { isLoading: isUpdatingRole }] = useUpdateRoleMutation();
 
-    // Local state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
@@ -71,7 +67,6 @@ const AdminManagement = () => {
     const [form] = Form.useForm();
     const [roleForm] = Form.useForm();
 
-    // Admin CRUD operations
     const handleCreateAdmin = async (values: any) => {
         try {
             await createAdmin(values).unwrap();
@@ -85,12 +80,8 @@ const AdminManagement = () => {
 
     const handleUpdateAdmin = async (values: any) => {
         if (!editingAdmin) return;
-
         try {
-            await updateAdmin({
-                id: editingAdmin._id,
-                data: values
-            }).unwrap();
+            await updateAdmin({ id: editingAdmin._id, data: values }).unwrap();
             message.success("Admin updated successfully!");
             setIsModalOpen(false);
             setEditingAdmin(null);
@@ -118,16 +109,10 @@ const AdminManagement = () => {
         }
     };
 
-    // Role CRUD operations
     const handleCreateRole = async (values: any) => {
         try {
             const permissions = Object.values(selectedRolePermissions);
-
-            await createRole({
-                name: values.name,
-                permissions
-            }).unwrap();
-
+            await createRole({ name: values.name, permissions }).unwrap();
             message.success("Role created successfully!");
             setIsRoleModalOpen(false);
             roleForm.resetFields();
@@ -139,18 +124,9 @@ const AdminManagement = () => {
 
     const handleUpdateRole = async (values: any) => {
         if (!editingRole) return;
-
         try {
             const permissions = Object.values(selectedRolePermissions);
-
-            await updateRole({
-                id: editingRole._id,
-                data: {
-                    name: values.name,
-                    permissions
-                }
-            }).unwrap();
-
+            await updateRole({ id: editingRole._id, data: { name: values.name, permissions } }).unwrap();
             message.success("Role updated successfully!");
             setIsRoleModalOpen(false);
             setEditingRole(null);
@@ -161,7 +137,6 @@ const AdminManagement = () => {
         }
     };
 
-    // Modal handlers
     const openCreateAdminModal = () => {
         setEditingAdmin(null);
         form.resetFields();
@@ -170,11 +145,7 @@ const AdminManagement = () => {
 
     const openEditAdminModal = (admin: Admin) => {
         setEditingAdmin(admin);
-        form.setFieldsValue({
-            email: admin.email,
-            role: admin.role._id,
-            isActive: admin.isActive
-        });
+        form.setFieldsValue({ email: admin.email, role: admin.role._id, isActive: admin.isActive });
         setIsModalOpen(true);
     };
 
@@ -187,56 +158,27 @@ const AdminManagement = () => {
 
     const openEditRoleModal = (role: Role) => {
         setEditingRole(role);
-        roleForm.setFieldsValue({
-            name: role.name
-        });
-
-        // Set existing permissions
+        roleForm.setFieldsValue({ name: role.name });
         const permissionsMap: Record<string, Permission> = {};
-        role.permissions.forEach(perm => {
-            permissionsMap[perm.menuId] = perm;
-        });
+        role.permissions.forEach(perm => { permissionsMap[perm.menuId] = perm; });
         setSelectedRolePermissions(permissionsMap);
         setIsRoleModalOpen(true);
     };
 
-    // Permission handlers
-    const handlePermissionChange = (
-        menuId: string,
-        menuName: string,
-        menuKey: string,
-        permission: keyof Omit<Permission, 'menuId' | 'menuName' | 'menuKey'>,
-        checked: boolean
-    ) => {
+    const handlePermissionChange = (menuId: string, menuName: string, menuKey: string, permission: keyof Omit<Permission, 'menuId' | 'menuName' | 'menuKey'>, checked: boolean) => {
         setSelectedRolePermissions(prev => {
-            const current = prev[menuId] || {
-                menuId,
-                menuName,
-                menuKey,
-                create: false,
-                read: false,
-                update: false,
-                delete: false
-            };
-
-            return {
-                ...prev,
-                [menuId]: {
-                    ...current,
-                    [permission]: checked
-                }
-            };
+            const current = prev[menuId] || { menuId, menuName, menuKey, create: false, read: false, update: false, delete: false };
+            return { ...prev, [menuId]: { ...current, [permission]: checked } };
         });
     };
 
-    // Table columns
     const adminColumns: ColumnsType<Admin> = [
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
             render: (text: string) => (
-                <Space>
+                <Space className="email-cell">
                     <MailOutlined style={{ color: "#667eea" }} />
                     <span style={{ fontWeight: "500" }}>{text}</span>
                 </Space>
@@ -244,10 +186,7 @@ const AdminManagement = () => {
             filteredValue: searchText ? [searchText] : null,
             onFilter: (value, record) => {
                 const search = value.toString().toLowerCase();
-                return (
-                    record.email.toLowerCase().includes(search) ||
-                    record.role.name.toLowerCase().includes(search)
-                );
+                return record.email.toLowerCase().includes(search) || record.role.name.toLowerCase().includes(search);
             }
         },
         {
@@ -255,15 +194,7 @@ const AdminManagement = () => {
             dataIndex: "role",
             key: "role",
             render: (role: Role) => (
-                <Tag
-                    color="purple"
-                    icon={<SafetyOutlined />}
-                    style={{
-                        fontSize: "13px",
-                        padding: "4px 12px",
-                        borderRadius: "4px"
-                    }}
-                >
+                <Tag color="purple" icon={<SafetyOutlined />} className="role-tag">
                     {role?.name}
                 </Tag>
             )
@@ -279,34 +210,26 @@ const AdminManagement = () => {
                     onChange={() => handleToggleStatus(record)}
                     checkedChildren={<CheckCircleOutlined />}
                     unCheckedChildren={<CloseCircleOutlined />}
-                    style={{
-                        backgroundColor: isActive ? "#52c41a" : "#d9d9d9"
-                    }}
+                    style={{ backgroundColor: isActive ? "#52c41a" : "#d9d9d9" }}
                 />
             )
         },
         {
             title: "Permissions",
             key: "permissions",
-            render: (_, record: Admin) => (
-                <Tag color="blue">
-                    {record?.role?.permissions.length} menus
-                </Tag>
-            )
+            render: (_, record: Admin) => <Tag color="blue">{record?.role?.permissions.length} menus</Tag>,
+            responsive: ['md'] as any,
         },
         {
-            title: "Created At",
+            title: "Created",
             dataIndex: "createdAt",
             key: "createdAt",
             render: (date: string) => (
-                <span style={{ color: "#718096", fontSize: "13px" }}>
-                    {new Date(date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    })}
+                <span className="date-cell">
+                    {new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </span>
-            )
+            ),
+            responsive: ['lg'] as any,
         },
         {
             title: "Actions",
@@ -315,33 +238,9 @@ const AdminManagement = () => {
             align: "center",
             render: (_, record: Admin) => (
                 <Space size="small">
-                    <Tooltip title="Edit Admin">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => openEditAdminModal(record)}
-                            style={{
-                                color: "#667eea",
-                                borderRadius: "6px"
-                            }}
-                        />
-                    </Tooltip>
-                    <Popconfirm
-                        title="Delete Admin"
-                        description="Are you sure you want to delete this admin?"
-                        onConfirm={() => handleDeleteAdmin(record._id)}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
-                    >
-                        <Tooltip title="Delete Admin">
-                            <Button
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                                style={{ borderRadius: "6px" }}
-                            />
-                        </Tooltip>
+                    <Tooltip title="Edit"><Button type="text" icon={<EditOutlined />} onClick={() => openEditAdminModal(record)} style={{ color: "#667eea", borderRadius: "6px" }} /></Tooltip>
+                    <Popconfirm title="Delete Admin" description="Are you sure?" onConfirm={() => handleDeleteAdmin(record._id)} okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}>
+                        <Tooltip title="Delete"><Button type="text" danger icon={<DeleteOutlined />} style={{ borderRadius: "6px" }} /></Tooltip>
                     </Popconfirm>
                 </Space>
             )
@@ -363,306 +262,114 @@ const AdminManagement = () => {
         {
             title: "Permissions",
             key: "permissions",
-            render: (_, record: Role) => (
-                <Tag color="green" style={{ fontSize: "13px" }}>
-                    {record.permissions.length} menus configured
-                </Tag>
-            )
+            render: (_, record: Role) => <Tag color="green" style={{ fontSize: "13px" }}>{record.permissions.length} menus</Tag>
         },
         {
-            title: "Created At",
+            title: "Created",
             dataIndex: "createdAt",
             key: "createdAt",
-            render: (date: string) => (
-                <span style={{ color: "#718096", fontSize: "13px" }}>
-                    {new Date(date).toLocaleDateString()}
-                </span>
-            )
+            render: (date: string) => <span className="date-cell">{new Date(date).toLocaleDateString()}</span>,
+            responsive: ['md'] as any,
         },
         {
             title: "Actions",
             key: "actions",
             align: "center",
             render: (_, record: Role) => (
-                <Space size="small">
-                    <Tooltip title="Edit Role">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => openEditRoleModal(record)}
-                            style={{ color: "#667eea" }}
-                        />
-                    </Tooltip>
-                </Space>
+                <Tooltip title="Edit"><Button type="text" icon={<EditOutlined />} onClick={() => openEditRoleModal(record)} style={{ color: "#667eea" }} /></Tooltip>
             )
         }
     ];
 
-    // Loading state
     if (adminsLoading || rolesLoading || menusLoading) {
         return (
-            <div style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            }}>
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
                 <Spin size="large" />
             </div>
         );
     }
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            padding: "30px"
-        }}>
-            <Card
-                style={{
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
-                }}
-            >
-                <Tabs
-                    defaultActiveKey="admins"
-                    items={[
-                        {
-                            key: 'admins',
-                            label: (
-                                <span>
-                                    <UserOutlined /> Admin Users
-                                </span>
-                            ),
-                            children: (
-                                <>
-                                    {/* Admin Management Header */}
-                                    <div style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        marginBottom: "20px",
-                                        paddingBottom: "15px",
-                                        borderBottom: "2px solid #E2E8F0"
-                                    }}>
-                                        <div>
-                                            <h2 style={{
-                                                margin: 0,
-                                                fontSize: "20px",
-                                                fontWeight: "600",
-                                                color: "#2D3748"
-                                            }}>
-                                                Admin Users
-                                            </h2>
-                                            <p style={{
-                                                margin: "5px 0 0",
-                                                fontSize: "13px",
-                                                color: "#718096"
-                                            }}>
-                                                Total {admins.length} administrators
-                                            </p>
+        <>
+            <div className="admin-container" style={{ minHeight: "100vh", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", padding: "30px" }}>
+                <Card style={{ borderRadius: "12px", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }}>
+                    <Tabs
+                        defaultActiveKey="admins"
+                        items={[
+                            {
+                                key: 'admins',
+                                label: <span><UserOutlined /> <span className="tab-label">Admin Users</span></span>,
+                                children: (
+                                    <>
+                                        <div className="section-header">
+                                            <div className="header-title">
+                                                <h2>Admin Users</h2>
+                                                <p>Total {admins.length} administrators</p>
+                                            </div>
+                                            <Space className="header-actions">
+                                                <Input placeholder="Search..." prefix={<SearchOutlined style={{ color: "#667eea" }} />} value={searchText} onChange={(e) => setSearchText(e.target.value)} allowClear className="search-input" />
+                                                <Tooltip title="Refresh"><Button icon={<ReloadOutlined />} onClick={() => refetchAdmins()} className="action-btn refresh-btn" /></Tooltip>
+                                                <Button type="primary" icon={<PlusOutlined />} onClick={openCreateAdminModal} className="action-btn create-btn"><span className="btn-label">Create</span></Button>
+                                            </Space>
                                         </div>
-                                        <Space>
-                                            <Input
-                                                placeholder="Search by email or role..."
-                                                prefix={<SearchOutlined style={{ color: "#667eea" }} />}
-                                                value={searchText}
-                                                onChange={(e) => setSearchText(e.target.value)}
-                                                allowClear
-                                                style={{
-                                                    width: "300px",
-                                                    height: "40px",
-                                                    borderRadius: "6px"
-                                                }}
-                                            />
-                                            <Tooltip title="Refresh">
-                                                <Button
-                                                    icon={<ReloadOutlined />}
-                                                    onClick={() => refetchAdmins()}
-                                                    style={{
-                                                        height: "40px",
-                                                        borderRadius: "6px",
-                                                        borderColor: "#667eea",
-                                                        color: "#667eea"
-                                                    }}
-                                                />
-                                            </Tooltip>
-                                            <Button
-                                                type="primary"
-                                                icon={<PlusOutlined />}
-                                                onClick={openCreateAdminModal}
-                                                style={{
-                                                    height: "40px",
-                                                    borderRadius: "6px",
-                                                    background: "linear-gradient(to right, #667eea, #764ba2)",
-                                                    border: "none",
-                                                    fontWeight: "500"
-                                                }}
-                                            >
-                                                Create Admin
-                                            </Button>
-                                        </Space>
-                                    </div>
-
-                                    {/* Admin Table */}
-                                    <Table
-                                        columns={adminColumns}
-                                        dataSource={admins}
-                                        rowKey="_id"
-                                        loading={isDeletingAdmin}
-                                        pagination={{
-                                            pageSize: 10,
-                                            showSizeChanger: true,
-                                            showTotal: (total) => `Total ${total} admins`
-                                        }}
-                                        expandable={{
-                                            expandedRowRender: (record) => (
-                                                <div style={{
-                                                    padding: "20px",
-                                                    background: "#F7FAFC",
-                                                    borderRadius: "8px"
-                                                }}>
-                                                    <h4 style={{ marginBottom: "15px", color: "#2D3748" }}>
-                                                        Menu Permissions
-                                                    </h4>
-                                                    <div style={{
-                                                        display: "grid",
-                                                        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                                                        gap: "12px"
-                                                    }}>
-                                                        {record.role.permissions.map((perm) => (
-                                                            <div
-                                                                key={perm.menuId}
-                                                                style={{
-                                                                    padding: "12px",
-                                                                    background: "#fff",
-                                                                    borderRadius: "6px",
-                                                                    border: "1px solid #E2E8F0"
-                                                                }}
-                                                            >
-                                                                <div style={{
-                                                                    fontWeight: "500",
-                                                                    marginBottom: "8px",
-                                                                    color: "#2D3748"
-                                                                }}>
-                                                                    {perm.menuName}
+                                        <Table
+                                            columns={adminColumns}
+                                            dataSource={admins}
+                                            rowKey="_id"
+                                            loading={isDeletingAdmin}
+                                            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Total ${total} admins` }}
+                                            expandable={{
+                                                expandedRowRender: (record) => (
+                                                    <div className="expanded-content">
+                                                        <h4>Menu Permissions</h4>
+                                                        <div className="permissions-grid">
+                                                            {record.role.permissions.map((perm) => (
+                                                                <div key={perm.menuId} className="permission-card">
+                                                                    <div className="permission-name">{perm.menuName}</div>
+                                                                    <Space size="small" wrap>
+                                                                        {perm.create && <Tag color="green">Create</Tag>}
+                                                                        {perm.read && <Tag color="blue">Read</Tag>}
+                                                                        {perm.update && <Tag color="orange">Update</Tag>}
+                                                                        {perm.delete && <Tag color="red">Delete</Tag>}
+                                                                    </Space>
                                                                 </div>
-                                                                <Space size="small" wrap>
-                                                                    {perm.create && <Tag color="green">Create</Tag>}
-                                                                    {perm.read && <Tag color="blue">Read</Tag>}
-                                                                    {perm.update && <Tag color="orange">Update</Tag>}
-                                                                    {perm.delete && <Tag color="red">Delete</Tag>}
-                                                                </Space>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )
-                                        }}
-                                    />
-                                </>
-                            )
-                        },
-                        {
-                            key: 'roles',
-                            label: (
-                                <span>
-                                    <SafetyOutlined /> Roles & Permissions
-                                </span>
-                            ),
-                            children: (
-                                <>
-                                    {/* Role Management Header */}
-                                    <div style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        marginBottom: "20px",
-                                        paddingBottom: "15px",
-                                        borderBottom: "2px solid #E2E8F0"
-                                    }}>
-                                        <div>
-                                            <h2 style={{
-                                                margin: 0,
-                                                fontSize: "20px",
-                                                fontWeight: "600",
-                                                color: "#2D3748"
-                                            }}>
-                                                Roles & Permissions
-                                            </h2>
-                                            <p style={{
-                                                margin: "5px 0 0",
-                                                fontSize: "13px",
-                                                color: "#718096"
-                                            }}>
-                                                Manage roles and menu permissions
-                                            </p>
+                                                )
+                                            }}
+                                        />
+                                    </>
+                                )
+                            },
+                            {
+                                key: 'roles',
+                                label: <span><SafetyOutlined /> <span className="tab-label">Roles</span></span>,
+                                children: (
+                                    <>
+                                        <div className="section-header">
+                                            <div className="header-title">
+                                                <h2>Roles & Permissions</h2>
+                                                <p>Manage roles and menu permissions</p>
+                                            </div>
+                                            <Space className="header-actions">
+                                                <Tooltip title="Refresh"><Button icon={<ReloadOutlined />} onClick={() => refetchRoles()} className="action-btn refresh-btn" /></Tooltip>
+                                                <Button type="primary" icon={<PlusOutlined />} onClick={openCreateRoleModal} className="action-btn create-btn"><span className="btn-label">Create</span></Button>
+                                            </Space>
                                         </div>
-                                        <Space>
-                                            <Tooltip title="Refresh">
-                                                <Button
-                                                    icon={<ReloadOutlined />}
-                                                    onClick={() => refetchRoles()}
-                                                    style={{
-                                                        height: "40px",
-                                                        borderRadius: "6px",
-                                                        borderColor: "#667eea",
-                                                        color: "#667eea"
-                                                    }}
-                                                />
-                                            </Tooltip>
-                                            <Button
-                                                type="primary"
-                                                icon={<PlusOutlined />}
-                                                onClick={openCreateRoleModal}
-                                                style={{
-                                                    height: "40px",
-                                                    borderRadius: "6px",
-                                                    background: "linear-gradient(to right, #667eea, #764ba2)",
-                                                    border: "none",
-                                                    fontWeight: "500"
-                                                }}
-                                            >
-                                                Create Role
-                                            </Button>
-                                        </Space>
-                                    </div>
-
-                                    {/* Role Table */}
-                                    <Table
-                                        columns={roleColumns}
-                                        dataSource={roles}
-                                        rowKey="_id"
-                                        pagination={{
-                                            pageSize: 10,
-                                            showTotal: (total) => `Total ${total} roles`
-                                        }}
-                                        expandable={{
-                                            expandedRowRender: (record) => (
-                                                <div style={{
-                                                    padding: "20px",
-                                                    background: "#F7FAFC",
-                                                    borderRadius: "8px"
-                                                }}>
-                                                    <h4 style={{ marginBottom: "15px", color: "#2D3748" }}>
-                                                        Configured Permissions
-                                                    </h4>
-                                                    <Table
-                                                        dataSource={record.permissions}
-                                                        rowKey="menuId"
-                                                        pagination={false}
-                                                        size="small"
-                                                        columns={[
+                                        <Table
+                                            columns={roleColumns}
+                                            dataSource={roles}
+                                            rowKey="_id"
+                                            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} roles` }}
+                                            expandable={{
+                                                expandedRowRender: (record) => (
+                                                    <div className="expanded-content">
+                                                        <h4>Configured Permissions</h4>
+                                                        <Table dataSource={record.permissions} rowKey="menuId" pagination={false} size="small" columns={[
+                                                            { title: "Menu", dataIndex: "menuName", key: "menuName" },
                                                             {
-                                                                title: "Menu",
-                                                                dataIndex: "menuName",
-                                                                key: "menuName"
-                                                            },
-                                                            {
-                                                                title: "Permissions",
-                                                                key: "permissions",
-                                                                render: (_, perm) => (
+                                                                title: "Permissions", key: "permissions", render: (_, perm) => (
                                                                     <Space size="small">
                                                                         {perm.create && <Tag color="green">Create</Tag>}
                                                                         {perm.read && <Tag color="blue">Read</Tag>}
@@ -671,353 +378,128 @@ const AdminManagement = () => {
                                                                     </Space>
                                                                 )
                                                             }
-                                                        ]}
-                                                    />
-                                                </div>
-                                            )
-                                        }}
-                                    />
-                                </>
-                            )
-                        }
-                    ]}
-                />
-            </Card>
-
-            {/* Create/Edit Admin Modal */}
-            <Modal
-                title={
-                    <div style={{
-                        fontSize: "18px",
-                        fontWeight: "600",
-                        color: "#2D3748",
-                        padding: "10px 0"
-                    }}>
-                        <UserOutlined style={{ marginRight: "8px", color: "#667eea" }} />
-                        {editingAdmin ? "Edit Admin" : "Create New Admin"}
-                    </div>
-                }
-                open={isModalOpen}
-                onCancel={() => {
-                    setIsModalOpen(false);
-                    setEditingAdmin(null);
-                    form.resetFields();
-                }}
-                footer={null}
-                width={500}
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={editingAdmin ? handleUpdateAdmin : handleCreateAdmin}
-                    style={{ marginTop: "20px" }}
-                >
-                    <Form.Item
-                        label={<span style={{ fontWeight: "500" }}>Email</span>}
-                        name="email"
-                        rules={[
-                            { required: true, message: "Please enter email" },
-                            { type: "email", message: "Please enter valid email" }
+                                                        ]} />
+                                                    </div>
+                                                )
+                                            }}
+                                        />
+                                    </>
+                                )
+                            }
                         ]}
-                    >
-                        <Input
-                            prefix={<MailOutlined style={{ color: "#667eea" }} />}
-                            placeholder="admin@example.com"
-                            disabled={!!editingAdmin}
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px"
-                            }}
-                        />
-                    </Form.Item>
+                    />
+                </Card>
 
-                    {!editingAdmin && (
-                        <Form.Item
-                            label={<span style={{ fontWeight: "500" }}>Password</span>}
-                            name="password"
-                            rules={[
-                                { required: true, message: "Please enter password" },
-                                { min: 6, message: "Password must be at least 6 characters" }
-                            ]}
-                        >
-                            <Input.Password
-                                prefix={<LockOutlined style={{ color: "#667eea" }} />}
-                                placeholder="Enter password"
-                                style={{
-                                    height: "42px",
-                                    borderRadius: "6px"
-                                }}
-                            />
+                {/* Admin Modal */}
+                <Modal title={<div style={{ fontSize: "18px", fontWeight: "600", color: "#2D3748", padding: "10px 0" }}><UserOutlined style={{ marginRight: "8px", color: "#667eea" }} />{editingAdmin ? "Edit Admin" : "Create Admin"}</div>} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingAdmin(null); form.resetFields(); }} footer={null} width={500}>
+                    <Form form={form} layout="vertical" onFinish={editingAdmin ? handleUpdateAdmin : handleCreateAdmin} style={{ marginTop: "20px" }}>
+                        <Form.Item label={<span style={{ fontWeight: "500" }}>Email</span>} name="email" rules={[{ required: true, message: "Please enter email" }, { type: "email", message: "Please enter valid email" }]}>
+                            <Input prefix={<MailOutlined style={{ color: "#667eea" }} />} placeholder="admin@example.com" disabled={!!editingAdmin} style={{ height: "42px", borderRadius: "6px" }} />
                         </Form.Item>
-                    )}
-
-                    <Form.Item
-                        label={<span style={{ fontWeight: "500" }}>Role</span>}
-                        name="role"
-                        rules={[{ required: true, message: "Please select role" }]}
-                    >
-                        <Select
-                            placeholder="Select role"
-                            style={{ height: "42px" }}
-                        >
-                            {roles.map(role => (
-                                <Select.Option key={role._id} value={role._id}>
-                                    {role.name}
-                                </Select.Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item
-                        label={<span style={{ fontWeight: "500" }}>Status</span>}
-                        name="isActive"
-                        valuePropName="checked"
-                        initialValue={true}
-                    >
-                        <Switch
-                            checkedChildren="Active"
-                            unCheckedChildren="Inactive"
-                        />
-                    </Form.Item>
-
-                    <div style={{
-                        marginTop: "25px",
-                        paddingTop: "20px",
-                        borderTop: "1px solid #E2E8F0",
-                        display: "flex",
-                        gap: "10px",
-                        justifyContent: "flex-end"
-                    }}>
-                        <Button
-                            onClick={() => {
-                                setIsModalOpen(false);
-                                setEditingAdmin(null);
-                                form.resetFields();
-                            }}
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px"
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={isCreatingAdmin || isUpdatingAdmin}
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px",
-                                background: "linear-gradient(to right, #667eea, #764ba2)",
-                                border: "none",
-                                fontWeight: "500"
-                            }}
-                        >
-                            {editingAdmin ? "Update Admin" : "Create Admin"}
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
-
-            {/* Create/Edit Role Modal */}
-            <Modal
-                title={
-                    <div style={{
-                        fontSize: "18px",
-                        fontWeight: "600",
-                        color: "#2D3748",
-                        padding: "10px 0"
-                    }}>
-                        <SafetyOutlined style={{ marginRight: "8px", color: "#667eea" }} />
-                        {editingRole ? "Edit Role" : "Create New Role"}
-                    </div>
-                }
-                open={isRoleModalOpen}
-                onCancel={() => {
-                    setIsRoleModalOpen(false);
-                    setEditingRole(null);
-                    roleForm.resetFields();
-                    setSelectedRolePermissions({});
-                }}
-                footer={null}
-                width={800}
-                style={{ top: 20 }}
-            >
-                <Form
-                    form={roleForm}
-                    layout="vertical"
-                    onFinish={editingRole ? handleUpdateRole : handleCreateRole}
-                    style={{ marginTop: "20px" }}
-                >
-                    <Form.Item
-                        label={<span style={{ fontWeight: "500" }}>Role Name</span>}
-                        name="name"
-                        rules={[{ required: true, message: "Please enter role name" }]}
-                    >
-                        <Input
-                            placeholder="e.g., Super Admin, Manager, Editor"
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px"
-                            }}
-                        />
-                    </Form.Item>
-
-                    <div style={{
-                        background: "#F7FAFC",
-                        padding: "20px",
-                        borderRadius: "8px",
-                        marginTop: "20px"
-                    }}>
-                        <h4 style={{
-                            margin: "0 0 15px",
-                            fontSize: "15px",
-                            fontWeight: "600",
-                            color: "#2D3748"
-                        }}>
-                            Menu Permissions
-                        </h4>
-
-                        <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-                            {menus.map((menu: MenuItem) => {
-                                const menuPerm = selectedRolePermissions[menu._id];
-
-                                return (
-                                    <div
-                                        key={menu._id}
-                                        style={{
-                                            padding: "15px",
-                                            background: "#fff",
-                                            borderRadius: "6px",
-                                            marginBottom: "12px",
-                                            border: "1px solid #E2E8F0"
-                                        }}
-                                    >
-                                        <div style={{
-                                            fontWeight: "500",
-                                            marginBottom: "10px",
-                                            color: "#2D3748",
-                                            fontSize: "14px"
-                                        }}>
-                                            {menu.name}
-                                            <Tag
-                                                color="blue"
-                                                style={{
-                                                    marginLeft: "8px",
-                                                    fontSize: "11px"
-                                                }}
-                                            >
-                                                {menu.key}
-                                            </Tag>
-                                        </div>
-
-                                        <Space size="large">
-                                            <Checkbox
-                                                checked={menuPerm?.create || false}
-                                                onChange={(e) =>
-                                                    handlePermissionChange(
-                                                        menu._id,
-                                                        menu.name,
-                                                        menu.key,
-                                                        'create',
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            >
-                                                <Tag color="green">Create</Tag>
-                                            </Checkbox>
-
-                                            <Checkbox
-                                                checked={menuPerm?.read || false}
-                                                onChange={(e) =>
-                                                    handlePermissionChange(
-                                                        menu._id,
-                                                        menu.name,
-                                                        menu.key,
-                                                        'read',
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            >
-                                                <Tag color="blue">Read</Tag>
-                                            </Checkbox>
-
-                                            <Checkbox
-                                                checked={menuPerm?.update || false}
-                                                onChange={(e) =>
-                                                    handlePermissionChange(
-                                                        menu._id,
-                                                        menu.name,
-                                                        menu.key,
-                                                        'update',
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            >
-                                                <Tag color="orange">Update</Tag>
-                                            </Checkbox>
-
-                                            <Checkbox
-                                                checked={menuPerm?.delete || false}
-                                                onChange={(e) =>
-                                                    handlePermissionChange(
-                                                        menu._id,
-                                                        menu.name,
-                                                        menu.key,
-                                                        'delete',
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            >
-                                                <Tag color="red">Delete</Tag>
-                                            </Checkbox>
-                                        </Space>
-                                    </div>
-                                );
-                            })}
+                        {!editingAdmin && (
+                            <Form.Item label={<span style={{ fontWeight: "500" }}>Password</span>} name="password" rules={[{ required: true, message: "Please enter password" }, { min: 6, message: "Password must be at least 6 characters" }]}>
+                                <Input.Password prefix={<LockOutlined style={{ color: "#667eea" }} />} placeholder="Enter password" style={{ height: "42px", borderRadius: "6px" }} />
+                            </Form.Item>
+                        )}
+                        <Form.Item label={<span style={{ fontWeight: "500" }}>Role</span>} name="role" rules={[{ required: true, message: "Please select role" }]}>
+                            <Select placeholder="Select role" style={{ height: "42px" }}>
+                                {roles.map(role => <Select.Option key={role._id} value={role._id}>{role.name}</Select.Option>)}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item label={<span style={{ fontWeight: "500" }}>Status</span>} name="isActive" valuePropName="checked" initialValue={true}>
+                            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+                        </Form.Item>
+                        <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid #E2E8F0", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                            <Button onClick={() => { setIsModalOpen(false); setEditingAdmin(null); form.resetFields(); }} style={{ height: "42px", borderRadius: "6px" }}>Cancel</Button>
+                            <Button type="primary" htmlType="submit" loading={isCreatingAdmin || isUpdatingAdmin} style={{ height: "42px", borderRadius: "6px", background: "linear-gradient(to right, #667eea, #764ba2)", border: "none", fontWeight: "500" }}>{editingAdmin ? "Update" : "Create"}</Button>
                         </div>
-                    </div>
+                    </Form>
+                </Modal>
 
-                    <div style={{
-                        marginTop: "25px",
-                        paddingTop: "20px",
-                        borderTop: "1px solid #E2E8F0",
-                        display: "flex",
-                        gap: "10px",
-                        justifyContent: "flex-end"
-                    }}>
-                        <Button
-                            onClick={() => {
-                                setIsRoleModalOpen(false);
-                                setEditingRole(null);
-                                roleForm.resetFields();
-                                setSelectedRolePermissions({});
-                            }}
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px"
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={isCreatingRole || isUpdatingRole}
-                            style={{
-                                height: "42px",
-                                borderRadius: "6px",
-                                background: "linear-gradient(to right, #667eea, #764ba2)",
-                                border: "none",
-                                fontWeight: "500"
-                            }}
-                        >
-                            {editingRole ? "Update Role" : "Create Role"}
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
-        </div>
+                {/* Role Modal */}
+                <Modal title={<div style={{ fontSize: "18px", fontWeight: "600", color: "#2D3748", padding: "10px 0" }}><SafetyOutlined style={{ marginRight: "8px", color: "#667eea" }} />{editingRole ? "Edit Role" : "Create Role"}</div>} open={isRoleModalOpen} onCancel={() => { setIsRoleModalOpen(false); setEditingRole(null); roleForm.resetFields(); setSelectedRolePermissions({}); }} footer={null} width={800} style={{ top: 20 }}>
+                    <Form form={roleForm} layout="vertical" onFinish={editingRole ? handleUpdateRole : handleCreateRole} style={{ marginTop: "20px" }}>
+                        <Form.Item label={<span style={{ fontWeight: "500" }}>Role Name</span>} name="name" rules={[{ required: true, message: "Please enter role name" }]}>
+                            <Input placeholder="e.g., Super Admin, Manager" style={{ height: "42px", borderRadius: "6px" }} />
+                        </Form.Item>
+                        <div className="permissions-section">
+                            <h4>Menu Permissions</h4>
+                            <div className="permissions-list">
+                                {menus.map((menu: MenuItem) => {
+                                    const menuPerm = selectedRolePermissions[menu._id];
+                                    return (
+                                        <div key={menu._id} className="permission-item">
+                                            <div className="permission-header">
+                                                {menu.name}
+                                                <Tag color="blue" style={{ marginLeft: "8px", fontSize: "11px" }}>{menu.key}</Tag>
+                                            </div>
+                                            <Space size="large" className="permission-checkboxes">
+                                                <Checkbox checked={menuPerm?.create || false} onChange={(e) => handlePermissionChange(menu._id, menu.name, menu.key, 'create', e.target.checked)}><Tag color="green">Create</Tag></Checkbox>
+                                                <Checkbox checked={menuPerm?.read || false} onChange={(e) => handlePermissionChange(menu._id, menu.name, menu.key, 'read', e.target.checked)}><Tag color="blue">Read</Tag></Checkbox>
+                                                <Checkbox checked={menuPerm?.update || false} onChange={(e) => handlePermissionChange(menu._id, menu.name, menu.key, 'update', e.target.checked)}><Tag color="orange">Update</Tag></Checkbox>
+                                                <Checkbox checked={menuPerm?.delete || false} onChange={(e) => handlePermissionChange(menu._id, menu.name, menu.key, 'delete', e.target.checked)}><Tag color="red">Delete</Tag></Checkbox>
+                                            </Space>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div style={{ marginTop: "25px", paddingTop: "20px", borderTop: "1px solid #E2E8F0", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                            <Button onClick={() => { setIsRoleModalOpen(false); setEditingRole(null); roleForm.resetFields(); setSelectedRolePermissions({}); }} style={{ height: "42px", borderRadius: "6px" }}>Cancel</Button>
+                            <Button type="primary" htmlType="submit" loading={isCreatingRole || isUpdatingRole} style={{ height: "42px", borderRadius: "6px", background: "linear-gradient(to right, #667eea, #764ba2)", border: "none", fontWeight: "500" }}>{editingRole ? "Update" : "Create"}</Button>
+                        </div>
+                    </Form>
+                </Modal>
+            </div>
+
+            {/* Responsive CSS */}
+            <style>{`
+                .admin-container { padding: 30px; }
+                .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #E2E8F0; }
+                .header-title h2 { margin: 0; font-size: 20px; font-weight: 600; color: #2D3748; }
+                .header-title p { margin: 5px 0 0; font-size: 13px; color: #718096; }
+                .header-actions { gap: 10px; }
+                .search-input { width: 300px; height: 40px; border-radius: 6px; }
+                .action-btn { height: 40px; border-radius: 6px; }
+                .refresh-btn { border-color: #667eea; color: #667eea; }
+                .create-btn { background: linear-gradient(to right, #667eea, #764ba2); border: none; font-weight: 500; }
+                .expanded-content { padding: 20px; background: #F7FAFC; border-radius: 8px; }
+                .expanded-content h4 { margin-bottom: 15px; color: #2D3748; }
+                .permissions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+                .permission-card { padding: 12px; background: #fff; border-radius: 6px; border: 1px solid #E2E8F0; }
+                .permission-name { font-weight: 500; margin-bottom: 8px; color: #2D3748; }
+                .permissions-section { background: #F7FAFC; padding: 20px; border-radius: 8px; margin-top: 20px; }
+                .permissions-section h4 { margin: 0 0 15px; font-size: 15px; font-weight: 600; color: #2D3748; }
+                .permissions-list { max-height: 400px; overflow-y: auto; }
+                .permission-item { padding: 15px; background: #fff; border-radius: 6px; margin-bottom: 12px; border: 1px solid #E2E8F0; }
+                .permission-header { font-weight: 500; margin-bottom: 10px; color: #2D3748; font-size: 14px; }
+                .permission-checkboxes { gap: 20px; }
+                .date-cell { color: #718096; font-size: 13px; }
+                .role-tag { font-size: 13px; padding: 4px 12px; border-radius: 4px; }
+
+                @media (max-width: 768px) {
+                    .admin-container { padding: 15px !important; }
+                    .section-header { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+                    .header-title h2 { font-size: 18px !important; }
+                    .header-title p { font-size: 12px !important; }
+                    .header-actions { width: 100%; flex-wrap: wrap; }
+                    .search-input { width: 100% !important; order: 3; }
+                    .action-btn { flex: 1; }
+                    .btn-label { font-size: 13px; }
+                    .refresh-btn .btn-label { display: none; }
+                    .tab-label { display: none; }
+                    .permissions-grid { grid-template-columns: 1fr !important; }
+                    .permission-checkboxes { flex-wrap: wrap; gap: 8px !important; }
+                    .email-cell { flex-direction: column; align-items: flex-start; gap: 4px; }
+                    .email-cell span { word-break: break-all; }
+                }
+                
+                @media (max-width: 400px) {
+                    .create-btn .btn-label { display: none; }
+                    .permission-checkboxes { flex-direction: column; align-items: flex-start; }
+                }
+            `}</style>
+        </>
     );
 };
 

@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface MenuItem {
     _id: string;
@@ -30,23 +30,23 @@ export const menuApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllMenus: build.query<MenuItem[], void>({
             query: () => ({ url: '/admin/menus/all', method: 'GET' }),
-            // providesTags: ['Menu'],
+            providesTags: [TAG_TYPES.MENU],
         }),
         getMenuById: build.query<MenuItem, string>({
             query: (id) => ({ url: `/admin/menus/single/${id}`, method: 'GET' }),
-            // providesTags: (_r, _e, id) => [{ type: 'Menu', id }],
+            providesTags: (_r, _e, id) => [{ type: TAG_TYPES.MENU, id }],
         }),
         createMenu: build.mutation<MenuItem, CreateMenuDto>({
             query: (data) => ({ url: '/admin/menus', method: 'POST', data }),
-            // invalidatesTags: ['Menu'],
+            invalidatesTags: [TAG_TYPES.MENU],
         }),
         updateMenu: build.mutation<MenuItem, { id: string; data: UpdateMenuDto }>({
             query: ({ id, data }) => ({ url: `/admin/menus/update/${id}`, method: 'PATCH', data }),
-            // invalidatesTags: ['Menu'],
+            invalidatesTags: [TAG_TYPES.MENU],
         }),
         deleteMenu: build.mutation<{ message: string; deletedCount: number }, string>({
             query: (id) => ({ url: `/admin/menus/delete/${id}`, method: 'DELETE' }),
-            // invalidatesTags: ['Menu'],
+            invalidatesTags: [TAG_TYPES.MENU],
         }),
     }),
 });

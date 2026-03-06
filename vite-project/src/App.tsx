@@ -11,7 +11,7 @@ function App() {
   const { data } = useGetAllMenusQuery();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename='/Anisha'>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireAuth />}>

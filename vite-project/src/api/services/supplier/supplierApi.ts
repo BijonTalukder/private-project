@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface Supplier {
     _id: string;
@@ -50,7 +50,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 url: '/admin/suppliers/all',
                 method: "GET"
             }),
-            // providesTags: ['Supplier']
+            providesTags: [TAG_TYPES.SUPPLIER]
         }),
 
         getActiveSuppliers: build.query<Supplier[], void>({
@@ -58,7 +58,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 url: '/admin/suppliers/active',
                 method: "GET"
             }),
-            // providesTags: ['Supplier']
+            providesTags: [TAG_TYPES.SUPPLIER]
         }),
 
         getSupplierById: build.query<Supplier, string>({
@@ -66,7 +66,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 url: `/admin/suppliers/single/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'Supplier', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.SUPPLIER, id }]
         }),
 
         createSupplier: build.mutation<Supplier, CreateSupplierDto>({
@@ -75,7 +75,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['Supplier']
+            invalidatesTags: [TAG_TYPES.SUPPLIER]
         }),
 
         updateSupplier: build.mutation<Supplier, { id: string; data: UpdateSupplierDto }>({
@@ -84,10 +84,10 @@ export const supplierApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'Supplier',
-            //     { type: 'Supplier', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.SUPPLIER,
+                { type: TAG_TYPES.SUPPLIER, id }
+            ]
         }),
 
         deleteSupplier: build.mutation<{ message: string }, string>({
@@ -95,7 +95,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 url: `/admin/suppliers/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['Supplier']
+            invalidatesTags: [TAG_TYPES.SUPPLIER]
         }),
 
         toggleSupplierStatus: build.mutation<Supplier, string>({
@@ -103,7 +103,7 @@ export const supplierApi = baseApi.injectEndpoints({
                 url: `/admin/suppliers/${id}/toggle-status`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['Supplier']
+            invalidatesTags: [TAG_TYPES.SUPPLIER]
         })
     })
 });

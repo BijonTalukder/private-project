@@ -13,6 +13,7 @@ import PurchaseItemInfoManagement from "../pages/purchase-item-management/Purcha
 import SupplierManagement from "../pages/supplier-management/SupplierManagement";
 import DeliveryChallanManagement from "../pages/delivery-challan/DeliveryChallanManagement";
 import ApprovedInvoiceListPage from "../pages/invoice-management/list/ApproveInvoiceListPage";
+import CurrencyConversionManagement from "../pages/currency-convert/CurrencyConversionManagement";
 
 
 
@@ -32,7 +33,7 @@ export const componentMap: Record<string, React.ComponentType<any>> = {
     "invoice-list": InvoiceListPage,
     "invoice-approved": ApprovedInvoiceListPage,
     "delivery-challan": DeliveryChallanManagement, // Placeholder, replace with actual Delivery Challan component when created
-
+    "currency-convert": CurrencyConversionManagement
     // // ✅ Order Module Parent
     // order: OrderIndex,
 
@@ -57,5 +58,6 @@ export const ROUTE_KEYS = [
     "invoice-list",
     "invoice-approved",
     "delivery-challan",
+    "currency-convert"
 
 ];

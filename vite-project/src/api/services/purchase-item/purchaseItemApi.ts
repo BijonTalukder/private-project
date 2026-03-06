@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 // Types
 export interface PopulatedColor {
@@ -58,7 +58,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: '/admin/purchase-item-info/all',
                 method: "GET"
             }),
-            // providesTags: ['PurchaseItemInfo']
+            providesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         getActivePurchaseItems: build.query<PurchaseItemInfo[], void>({
@@ -66,7 +66,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: '/admin/purchase-item-info/active',
                 method: "GET"
             }),
-            // providesTags: ['PurchaseItemInfo']
+            providesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         getSameAsFinishGoodItems: build.query<PurchaseItemInfo[], void>({
@@ -74,7 +74,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: '/admin/purchase-item-info/same-as-finish-good',
                 method: "GET"
             }),
-            // providesTags: ['PurchaseItemInfo']
+            providesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         searchPurchaseItems: build.query<PurchaseItemInfo[], string>({
@@ -82,7 +82,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: `/admin/purchase-item-info/search?q=${searchQuery}`,
                 method: "GET"
             }),
-            // providesTags: ['PurchaseItemInfo']
+            providesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         getPurchaseItemById: build.query<PurchaseItemInfo, string>({
@@ -90,7 +90,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: `/admin/purchase-item-info/single/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'PurchaseItemInfo', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.PURCHASE_ITEM, id }]
         }),
 
         createPurchaseItem: build.mutation<PurchaseItemInfo, CreatePurchaseItemInfoDto>({
@@ -99,7 +99,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['PurchaseItemInfo']
+            invalidatesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         updatePurchaseItem: build.mutation<PurchaseItemInfo, { id: string; data: UpdatePurchaseItemInfoDto }>({
@@ -108,10 +108,10 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'PurchaseItemInfo',
-            //     { type: 'PurchaseItemInfo', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.PURCHASE_ITEM,
+                { type: TAG_TYPES.PURCHASE_ITEM, id }
+            ]
         }),
 
         deletePurchaseItem: build.mutation<{ message: string }, string>({
@@ -119,7 +119,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: `/admin/purchase-item-info/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['PurchaseItemInfo']
+            invalidatesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         togglePurchaseItemStatus: build.mutation<PurchaseItemInfo, string>({
@@ -127,7 +127,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: `/admin/purchase-item-info/${id}/toggle-status`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['PurchaseItemInfo']
+            invalidatesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
 
         toggleSameAsFinishGood: build.mutation<PurchaseItemInfo, string>({
@@ -135,7 +135,7 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
                 url: `/admin/purchase-item-info/${id}/toggle-same-as-finish-good`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['PurchaseItemInfo']
+            invalidatesTags: [TAG_TYPES.PURCHASE_ITEM]
         })
     })
 });

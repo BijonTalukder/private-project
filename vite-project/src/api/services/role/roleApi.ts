@@ -1,5 +1,5 @@
 import type { CreateRoleDto, Role, UpdateRoleDto } from "../admin/adminApi";
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export const roleApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
@@ -10,7 +10,7 @@ export const roleApi = baseApi.injectEndpoints({
                 url: '/admin/roles/all',
                 method: "GET"
             }),
-            // providesTags: ['Role']
+            providesTags: [TAG_TYPES.ROLE]
         }),
 
         getRoleById: build.query<Role, string>({
@@ -18,7 +18,7 @@ export const roleApi = baseApi.injectEndpoints({
                 url: `/admin/roles/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'Role', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.ROLE, id }]
         }),
 
         createRole: build.mutation<Role, CreateRoleDto>({
@@ -27,7 +27,7 @@ export const roleApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['Role']
+            invalidatesTags: [TAG_TYPES.ROLE]
         }),
 
         updateRole: build.mutation<Role, { id: string; data: UpdateRoleDto }>({
@@ -36,10 +36,10 @@ export const roleApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'Role',
-            //     { type: 'Role', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.ROLE,
+                { type: TAG_TYPES.ROLE, id }
+            ]
         }),
 
         deleteRole: build.mutation<{ message: string }, string>({
@@ -47,7 +47,7 @@ export const roleApi = baseApi.injectEndpoints({
                 url: `/admin/roles/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['Role']
+            invalidatesTags: [TAG_TYPES.ROLE]
         })
     })
 })

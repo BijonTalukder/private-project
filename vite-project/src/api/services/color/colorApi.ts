@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface Color {
     _id: string;
@@ -26,31 +26,31 @@ export const colorApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllColors: build.query<Color[], void>({
             query: () => ({ url: '/admin/colors/all', method: "GET" }),
-            // providesTags: ['Color']
+            providesTags: [TAG_TYPES.COLOR]
         }),
         getActiveColors: build.query<Color[], void>({
             query: () => ({ url: '/admin/colors/active', method: "GET" }),
-            // providesTags: ['Color']
+            providesTags: [TAG_TYPES.COLOR]
         }),
         getColorById: build.query<Color, string>({
             query: (id) => ({ url: `/admin/colors/single/${id}`, method: "GET" }),
-            // providesTags: (_result, _error, id) => [{ type: 'Color', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.COLOR, id }]
         }),
         createColor: build.mutation<Color, CreateColorDto>({
             query: (data) => ({ url: '/admin/colors/create', method: "POST", data }),
-            // invalidatesTags: ['Color']
+            invalidatesTags: [TAG_TYPES.COLOR]
         }),
         updateColor: build.mutation<Color, { id: string; data: UpdateColorDto }>({
             query: ({ id, data }) => ({ url: `/admin/colors/update/${id}`, method: "PATCH", data }),
-            // invalidatesTags: (_result, _error, { id }) => ['Color', { type: 'Color', id }]
+            invalidatesTags: (_result, _error, { id }) => [TAG_TYPES.COLOR, { type: TAG_TYPES.COLOR, id }]
         }),
         deleteColor: build.mutation<{ message: string }, string>({
             query: (id) => ({ url: `/admin/colors/delete/${id}`, method: "DELETE" }),
-            // invalidatesTags: ['Color']
+            invalidatesTags: [TAG_TYPES.COLOR]
         }),
         toggleColorStatus: build.mutation<Color, string>({
             query: (id) => ({ url: `/admin/colors/${id}/toggle-status`, method: "PATCH" }),
-            // invalidatesTags: ['Color']
+            invalidatesTags: [TAG_TYPES.COLOR]
         })
     })
 });

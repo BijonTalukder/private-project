@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface PaymentInfo {
     _id: string;
@@ -26,31 +26,31 @@ export const paymentInfoApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllPayments: build.query<PaymentInfo[], void>({
             query: () => ({ url: '/admin/payment-info/all', method: 'GET' }),
-            // providesTags: ['PaymentInfo'],
+            providesTags: [TAG_TYPES.PAYMENT],
         }),
         getActivePayments: build.query<PaymentInfo[], void>({
             query: () => ({ url: '/admin/payment-info/active', method: 'GET' }),
-            // providesTags: ['PaymentInfo'],
+            providesTags: [TAG_TYPES.PAYMENT],
         }),
         getPaymentById: build.query<PaymentInfo, string>({
             query: (id) => ({ url: `/admin/payment-info/single/${id}`, method: 'GET' }),
-            // providesTags: (_r, _e, id) => [{ type: 'PaymentInfo', id }],
+            providesTags: (_r, _e, id) => [{ type: TAG_TYPES.PAYMENT, id }],
         }),
         createPayment: build.mutation<PaymentInfo, CreatePaymentInfoDto>({
             query: (data) => ({ url: '/admin/payment-info/create', method: 'POST', data }),
-            // invalidatesTags: ['PaymentInfo'],
+            invalidatesTags: [TAG_TYPES.PAYMENT],
         }),
         updatePayment: build.mutation<PaymentInfo, { id: string; data: UpdatePaymentInfoDto }>({
             query: ({ id, data }) => ({ url: `/admin/payment-info/update/${id}`, method: 'PATCH', data }),
-            // invalidatesTags: (_r, _e, { id }) => ['PaymentInfo', { type: 'PaymentInfo', id }],
+            invalidatesTags: (_r, _e, { id }) => [TAG_TYPES.PAYMENT, { type: TAG_TYPES.PAYMENT, id }],
         }),
         deletePayment: build.mutation<{ message: string }, string>({
             query: (id) => ({ url: `/admin/payment-info/delete/${id}`, method: 'DELETE' }),
-            // invalidatesTags: ['PaymentInfo'],
+            invalidatesTags: [TAG_TYPES.PAYMENT],
         }),
         togglePaymentStatus: build.mutation<PaymentInfo, string>({
             query: (id) => ({ url: `/admin/payment-info/${id}/toggle-status`, method: 'PATCH' }),
-            // invalidatesTags: ['PaymentInfo'],
+            invalidatesTags: [TAG_TYPES.PAYMENT],
         }),
     }),
 });

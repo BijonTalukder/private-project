@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface GSM {
     _id: string;
@@ -22,31 +22,31 @@ export const gsmApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllGSMs: build.query<GSM[], void>({
             query: () => ({ url: '/admin/gsm/all', method: "GET" }),
-            // providesTags: ['GSM']
+            providesTags: [TAG_TYPES.GSM]
         }),
         getActiveGSMs: build.query<GSM[], void>({
             query: () => ({ url: '/admin/gsm/active', method: "GET" }),
-            // providesTags: ['GSM']
+            providesTags: [TAG_TYPES.GSM]
         }),
         getGSMById: build.query<GSM, string>({
             query: (id) => ({ url: `/admin/gsm/single/${id}`, method: "GET" }),
-            // providesTags: (_result, _error, id) => [{ type: 'GSM', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.GSM, id }]
         }),
         createGSM: build.mutation<GSM, CreateGSMDto>({
             query: (data) => ({ url: '/admin/gsm/create', method: "POST", data }),
-            // invalidatesTags: ['GSM']
+            invalidatesTags: [TAG_TYPES.GSM]
         }),
         updateGSM: build.mutation<GSM, { id: string; data: UpdateGSMDto }>({
             query: ({ id, data }) => ({ url: `/admin/gsm/update/${id}`, method: "PATCH", data }),
-            // invalidatesTags: (_result, _error, { id }) => ['GSM', { type: 'GSM', id }]
+            invalidatesTags: (_result, _error, { id }) => [TAG_TYPES.GSM, { type: TAG_TYPES.GSM, id }]
         }),
         deleteGSM: build.mutation<{ message: string }, string>({
             query: (id) => ({ url: `/admin/gsm/delete/${id}`, method: "DELETE" }),
-            // invalidatesTags: ['GSM']
+            invalidatesTags: [TAG_TYPES.GSM]
         }),
         toggleGSMStatus: build.mutation<GSM, string>({
             query: (id) => ({ url: `/admin/gsm/${id}/toggle-status`, method: "PATCH" }),
-            // invalidatesTags: ['GSM']
+            invalidatesTags: [TAG_TYPES.GSM]
         })
     })
 });

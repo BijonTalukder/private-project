@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface DeliveryChallanItem {
@@ -76,17 +76,17 @@ export const deliveryChallanApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllChallans: build.query<DeliveryChallan[], void>({
             query: () => ({ url: '/admin/delivery-challans/all', method: 'GET' }),
-            // providesTags: ['DeliveryChallan'],
+            providesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
 
         getChallanById: build.query<DeliveryChallan, string>({
             query: (id) => ({ url: `/admin/delivery-challans/single/${id}`, method: 'GET' }),
-            // providesTags: (_r, _e, id) => [{ type: 'DeliveryChallan', id }],
+            providesTags: (_r, _e, id) => [{ type: TAG_TYPES.DELIVERY_CHALLAN, id }],
         }),
 
         getChallansByInvoice: build.query<DeliveryChallan[], string>({
             query: (invoiceId) => ({ url: `/admin/delivery-challans/invoice/${invoiceId}`, method: 'GET' }),
-            // providesTags: ['DeliveryChallan'],
+            providesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
 
         getInvoiceDeliverySummary: build.query<InvoiceDeliverySummary, string>({
@@ -94,27 +94,27 @@ export const deliveryChallanApi = baseApi.injectEndpoints({
                 url: `/admin/delivery-challans/invoice/${invoiceId}/summary`,
                 method: 'GET',
             }),
-            // providesTags: ['DeliveryChallan'],
+            providesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
 
         createChallan: build.mutation<DeliveryChallan, CreateDeliveryChallanDto>({
             query: (data) => ({ url: '/admin/delivery-challans/create', method: 'POST', data }),
-            // invalidatesTags: ['DeliveryChallan'],
+            invalidatesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
 
         updateChallan: build.mutation<DeliveryChallan, { id: string; data: UpdateDeliveryChallanDto }>({
             query: ({ id, data }) => ({ url: `/admin/delivery-challans/update/${id}`, method: 'PATCH', data }),
-            // invalidatesTags: (_r, _e, { id }) => ['DeliveryChallan', { type: 'DeliveryChallan', id }],
+            invalidatesTags: (_r, _e, { id }) => [TAG_TYPES.DELIVERY_CHALLAN, { type: TAG_TYPES.DELIVERY_CHALLAN, id }],
         }),
 
         deleteChallan: build.mutation<{ message: string }, string>({
             query: (id) => ({ url: `/admin/delivery-challans/delete/${id}`, method: 'DELETE' }),
-            // invalidatesTags: ['DeliveryChallan'],
+            invalidatesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
 
         toggleChallanStatus: build.mutation<DeliveryChallan, string>({
             query: (id) => ({ url: `/admin/delivery-challans/toggle-status/${id}`, method: 'PATCH' }),
-            // invalidatesTags: ['DeliveryChallan'],
+            invalidatesTags: [TAG_TYPES.DELIVERY_CHALLAN],
         }),
     }),
 });

@@ -18,34 +18,24 @@ interface RecursiveMenuTreeProps {
     onDelete: (id: string, hasChildren: boolean, childCount: number) => void;
 }
 
-const RecursiveMenuTree = ({
-    menuData,
-    onAddChild,
-    onEdit,
-    onDelete,
-}: RecursiveMenuTreeProps) => {
+const RecursiveMenuTree = ({ menuData, onAddChild, onEdit, onDelete }: RecursiveMenuTreeProps) => {
     const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
 
-    // ✅ Get all keys recursively (expand all)
     const getAllKeys = (items: MenuItem[]): React.Key[] => {
         let keys: React.Key[] = [];
-
         items.forEach((item) => {
             keys.push(item._id);
             if (item.children?.length) {
                 keys = [...keys, ...getAllKeys(item.children)];
             }
         });
-
         return keys;
     };
 
-    // ✅ Expand all when menu changes
     useEffect(() => {
         setExpandedKeys(getAllKeys(menuData));
     }, [menuData]);
 
-    // ✅ Convert API menu → Ant Tree
     const convertToTreeData = (items: MenuItem[]): DataNode[] => {
         return items.map((item) => {
             const children = item.children ?? [];
@@ -54,43 +44,24 @@ const RecursiveMenuTree = ({
             return {
                 key: item._id,
                 title: (
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "4px 8px",
-                            borderRadius: "6px",
-                        }}
-                        onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = "#F7FAFC")
-                        }
-                        onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "transparent")
-                        }
-                    >
-                        {/* LEFT */}
-                        <Space>
-                            {/* {hasChildren ? (
-                                <FolderOpenOutlined style={{ color: "#667eea" }} />
-                            ) : (
-                                <FileOutlined style={{ color: "#718096" }} />
-                            )} */}
-
-                            <span style={{ fontWeight: 500 }}>{item.name}</span>
-
-                            {/* key tag (hide if empty) */}
+                    <div className="tree-node">
+                        {/* Left side */}
+                        <Space className="tree-node-left">
+                            <span className="tree-node-name">{item.name}</span>
                             {item.key && (
-                                <Tag color="blue" style={{ fontFamily: "monospace" }}>
+                                <Tag color="blue" className="tree-node-key">
                                     {item.key}
                                 </Tag>
                             )}
-
-                            {hasChildren && <Tag color="green">{children.length}</Tag>}
+                            {hasChildren && (
+                                <Tag color="green" className="tree-node-count">
+                                    {children.length}
+                                </Tag>
+                            )}
                         </Space>
 
-                        {/* RIGHT ACTIONS */}
-                        <Space size="small">
+                        {/* Right actions */}
+                        <Space size="small" className="tree-node-actions">
                             <Tooltip title="Add Child">
                                 <Button
                                     type="text"
@@ -100,7 +71,7 @@ const RecursiveMenuTree = ({
                                         e.stopPropagation();
                                         onAddChild(item._id);
                                     }}
-                                    style={{ color: "#52c41a" }}
+                                    className="action-btn add-btn"
                                 />
                             </Tooltip>
 
@@ -113,7 +84,7 @@ const RecursiveMenuTree = ({
                                         e.stopPropagation();
                                         onEdit(item);
                                     }}
-                                    style={{ color: "#667eea" }}
+                                    className="action-btn edit-btn"
                                 />
                             </Tooltip>
 
@@ -121,10 +92,10 @@ const RecursiveMenuTree = ({
                                 title="Delete Menu"
                                 description={
                                     <div>
-                                        <p>Are you sure to delete "{item.name}"?</p>
+                                        <p>Delete "{item.name}"?</p>
                                         {hasChildren && (
-                                            <p style={{ color: "red", fontWeight: 500 }}>
-                                                ⚠️ This will delete {children.length} submenu(s)
+                                            <p style={{ color: "red", fontWeight: 500, marginTop: 8 }}>
+                                                ⚠️ Deletes {children.length} submenu(s)
                                             </p>
                                         )}
                                     </div>
@@ -144,6 +115,7 @@ const RecursiveMenuTree = ({
                                         danger
                                         icon={<DeleteOutlined />}
                                         onClick={(e) => e.stopPropagation()}
+                                        className="action-btn delete-btn"
                                     />
                                 </Tooltip>
                             </Popconfirm>
@@ -163,37 +135,175 @@ const RecursiveMenuTree = ({
     const treeData = convertToTreeData(menuData);
 
     return (
-        <div
-            style={{
-                background: "#fff",
-                padding: 20,
-                borderRadius: 8,
-                border: "1px solid #E2E8F0",
-            }}
-        >
-            {/* ROOT ADD BUTTON */}
-            {/* <div style={{ marginBottom: 12 }}>
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => onAddChild(null)}>
-                    Create Root Menu
-                </Button>
-            </div> */}
+        <>
+            <div className="tree-container">
+                {menuData.length === 0 ? (
+                    <div className="tree-empty">
+                        <FolderOpenOutlined style={{ fontSize: 40, opacity: 0.4, marginBottom: 10 }} />
+                        <p style={{ margin: 0, color: "#718096" }}>No menu found</p>
+                    </div>
+                ) : (
+                    <Tree
+                        showLine
+                        showIcon
+                        expandedKeys={expandedKeys}
+                        onExpand={(keys) => setExpandedKeys(keys)}
+                        treeData={treeData}
+                    />
+                )}
+            </div>
 
-            {/* EMPTY */}
-            {menuData.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 50 }}>
-                    <FolderOpenOutlined style={{ fontSize: 40, opacity: 0.4 }} />
-                    <p>No menu found</p>
-                </div>
-            ) : (
-                <Tree
-                    showLine
-                    showIcon
-                    expandedKeys={expandedKeys}
-                    onExpand={(keys) => setExpandedKeys(keys)}
-                    treeData={treeData}
-                />
-            )}
-        </div>
+            {/* Responsive CSS */}
+            <style>{`
+                /* Desktop styles */
+                .tree-container {
+                    background: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    border: 1px solid #E2E8F0;
+                }
+
+                .tree-node {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    transition: all 0.2s;
+                }
+
+                .tree-node:hover {
+                    background: #F7FAFC;
+                }
+
+                .tree-node-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex: 1;
+                    min-width: 0;
+                }
+
+                .tree-node-name {
+                    font-weight: 500;
+                    font-size: 14px;
+                    color: #2D3748;
+                }
+
+                .tree-node-key {
+                    font-family: monospace;
+                    font-size: 11px;
+                    padding: 2px 8px;
+                }
+
+                .tree-node-count {
+                    font-size: 11px;
+                }
+
+                .tree-node-actions {
+                    display: flex;
+                    gap: 4px;
+                }
+
+                .action-btn {
+                    border-radius: 4px;
+                }
+
+                .add-btn {
+                    color: #52c41a !important;
+                }
+
+                .edit-btn {
+                    color: #667eea !important;
+                }
+
+                .tree-empty {
+                    text-align: center;
+                    padding: 60px 20px;
+                }
+
+                /* Mobile responsive (< 768px) */
+                @media (max-width: 768px) {
+                    .tree-container {
+                        padding: 12px;
+                    }
+
+                    .tree-node {
+                        padding: 6px 4px;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+
+                    .tree-node-left {
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        max-width: calc(100% - 120px);
+                    }
+
+                    .tree-node-name {
+                        font-size: 13px;
+                        word-break: break-word;
+                    }
+
+                    .tree-node-key {
+                        font-size: 10px;
+                        padding: 1px 6px;
+                    }
+
+                    .tree-node-count {
+                        font-size: 10px;
+                        padding: 1px 6px;
+                    }
+
+                    .tree-node-actions {
+                        gap: 2px;
+                    }
+
+                    .action-btn {
+                        min-width: 32px;
+                        height: 32px;
+                    }
+
+                    /* Reduce tree indentation on mobile */
+                    .ant-tree .ant-tree-treenode {
+                        padding: 2px 0 !important;
+                    }
+
+                    .ant-tree .ant-tree-indent-unit {
+                        width: 16px !important;
+                    }
+                }
+
+                /* Very small screens (< 400px) */
+                @media (max-width: 400px) {
+                    .tree-node {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                    }
+
+                    .tree-node-left {
+                        width: 100%;
+                        max-width: 100%;
+                    }
+
+                    .tree-node-actions {
+                        width: 100%;
+                        justify-content: flex-end;
+                        padding-top: 4px;
+                        border-top: 1px solid #f0f0f0;
+                        margin-top: 4px;
+                    }
+
+                    .tree-container {
+                        padding: 8px;
+                    }
+
+                    .ant-tree .ant-tree-indent-unit {
+                        width: 12px !important;
+                    }
+                }
+            `}</style>
+        </>
     );
 };
 

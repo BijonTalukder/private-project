@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface Client {
     _id: string;
@@ -36,7 +36,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: '/admin/clients/all',
                 method: "GET"
             }),
-            // providesTags: ['Client']
+            providesTags: [TAG_TYPES.CLIENT]
         }),
 
         getActiveClients: build.query<Client[], void>({
@@ -44,7 +44,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: '/admin/clients/active',
                 method: "GET"
             }),
-            // providesTags: ['Client']
+            providesTags: [TAG_TYPES.CLIENT]
         }),
 
         searchClients: build.query<Client[], string>({
@@ -52,7 +52,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: `/admin/clients/search?q=${searchQuery}`,
                 method: "GET"
             }),
-            // providesTags: ['Client']
+            providesTags: [TAG_TYPES.CLIENT]
         }),
 
         getClientById: build.query<Client, string>({
@@ -60,7 +60,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: `/admin/clients/single/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'Client', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.CLIENT, id }]
         }),
 
         createClient: build.mutation<Client, CreateClientDto>({
@@ -69,7 +69,7 @@ export const clientApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['Client']
+            invalidatesTags: [TAG_TYPES.CLIENT]
         }),
 
         updateClient: build.mutation<Client, { id: string; data: UpdateClientDto }>({
@@ -78,10 +78,10 @@ export const clientApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'Client',
-            //     { type: 'Client', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.CLIENT,
+                { type: TAG_TYPES.CLIENT, id }
+            ]
         }),
 
         deleteClient: build.mutation<{ message: string }, string>({
@@ -89,7 +89,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: `/admin/clients/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['Client']
+            invalidatesTags: [TAG_TYPES.CLIENT]
         }),
 
         toggleClientStatus: build.mutation<Client, string>({
@@ -97,7 +97,7 @@ export const clientApi = baseApi.injectEndpoints({
                 url: `/admin/clients/${id}/toggle-status`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['Client']
+            invalidatesTags: [TAG_TYPES.CLIENT]
         })
     })
 });

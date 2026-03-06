@@ -1,9 +1,8 @@
-import { Select, InputNumber, Button, Space, Tag } from "antd";
+import { Select, InputNumber, Button } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { FinishGoods } from "../../../api/services/finish-goods/finishGoodsApi";
 import type { SupplierPurchasePriceList } from "../../../api/services/supplier-purchase-price/SupplierpurchasepricelistApi";
-// import type { FinishGoods } from "../../api/services/finishGoods/finishGoodsApi";
-// import type { SupplierPurchasePriceList } from "../../api/services/supplierPurchasePriceList/supplierPurchasePriceListApi";
+import { getCurrencyConfig } from "../../../utils/currencyUtils";
 
 interface InvoiceItemRowProps {
     item: {
@@ -21,6 +20,7 @@ interface InvoiceItemRowProps {
     onChange: (index: number, field: string, value: any) => void;
     onDelete: (index: number) => void;
     disabled?: boolean;
+    currencyName: string; // ✅ passed from parent form
 }
 
 const InvoiceItemRow = ({
@@ -31,21 +31,29 @@ const InvoiceItemRow = ({
     onChange,
     onDelete,
     disabled = false,
+    currencyName,
 }: InvoiceItemRowProps) => {
-    const selectedFinishGood = finishGoods.find((fg) => fg._id === item.finishGoodsId);
-    const selectedPriceList = priceLists.find((pl) => pl._id === item.supplierPurchasePriceId);
 
-    // Auto-calculate amount when qty or price changes
+    // ✅ Resolve currency icon from the invoice-level currency
+    const currencyConfig = getCurrencyConfig(currencyName);
+
     const handleQtyChange = (value: number | null) => {
         if (value === null) return;
         onChange(index, "invoiceQty", value);
-        onChange(index, "amount", value * item.price);
+        onChange(index, "amount", value * item.unitPrice);
     };
 
-    const handlePriceChange = (value: number | null) => {
+    const handleUnitPriceChange = (value: number | null) => {
         if (value === null) return;
-        onChange(index, "price", value);
+        onChange(index, "unitPrice", value);
+        onChange(index, "price", value - item.commission);
         onChange(index, "amount", item.invoiceQty * value);
+    };
+
+    const handleCommissionChange = (value: number | null) => {
+        const commission = value || 0;
+        onChange(index, "commission", commission);
+        onChange(index, "price", item.unitPrice - commission);
     };
 
     return (
@@ -86,7 +94,12 @@ const InvoiceItemRow = ({
                     onChange(index, "supplierPurchasePriceId", value);
                     const priceList = priceLists.find((pl) => pl._id === value);
                     if (priceList) {
-                        onChange(index, "unitPrice", priceList.purchaseRate);
+                        const unitPrice = priceList.purchaseRate;
+                        const commission = 0;
+                        onChange(index, "unitPrice", unitPrice);
+                        onChange(index, "commission", commission);
+                        onChange(index, "price", unitPrice - commission);
+                        onChange(index, "amount", item.invoiceQty * unitPrice);
                     }
                 }}
                 disabled={disabled}
@@ -96,7 +109,7 @@ const InvoiceItemRow = ({
             >
                 {priceLists.map((pl) => (
                     <Select.Option key={pl._id} value={pl._id}>
-                        {pl.supplierId.supplierName} — ${pl.purchaseRate}
+                        {pl.supplierId.supplierName} — {getCurrencyConfig(pl.currencyId?.name)?.symbol}{pl.purchaseRate}
                     </Select.Option>
                 ))}
             </Select>
@@ -117,7 +130,7 @@ const InvoiceItemRow = ({
                 min={0}
                 precision={2}
                 value={item.unitPrice}
-                onChange={(value) => onChange(index, "unitPrice", value || 0)}
+                onChange={handleUnitPriceChange}
                 disabled={disabled}
                 style={{ width: "100%" }}
             />
@@ -128,23 +141,22 @@ const InvoiceItemRow = ({
                 min={0}
                 precision={2}
                 value={item.commission}
-                onChange={(value) => onChange(index, "commission", value || 0)}
+                onChange={handleCommissionChange}
                 disabled={disabled}
                 style={{ width: "100%" }}
             />
 
-            {/* Price */}
+            {/* Price (read-only) */}
             <InputNumber
                 placeholder="Price"
                 min={0}
                 precision={2}
                 value={item.price}
-                onChange={handlePriceChange}
-                disabled={disabled}
-                style={{ width: "100%" }}
+                disabled
+                style={{ width: "100%", background: "#F0F0F0" }}
             />
 
-            {/* Amount (read-only) */}
+            {/* Amount (read-only) — ✅ shows icon from invoice-level currency */}
             <div
                 style={{
                     padding: "8px 12px",
@@ -157,7 +169,7 @@ const InvoiceItemRow = ({
                     color: "#667eea",
                 }}
             >
-                ${item.amount.toFixed(2)}
+                {currencyConfig.symbol} {item.amount.toFixed(2)}
             </div>
 
             {/* Delete */}

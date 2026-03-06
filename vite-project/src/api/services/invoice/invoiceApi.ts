@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 
 // ─── Nested Types ─────────────────────────────────────────────────────────────
@@ -8,6 +8,7 @@ export interface PopulatedClient {
     name: string;
     contactNo: string;
     email: string;
+    address: string;
 }
 
 export interface PopulatedCurrency {
@@ -60,6 +61,10 @@ export interface InvoiceItem {
     unitPrice: number;
     commission: number;
     price: number;
+    currencyId: {
+        _id: string;
+        name: string
+    } | string
     amount: number;
 }
 
@@ -79,6 +84,7 @@ export interface Invoice {
     totalQty: number;
     totalAmount: number;
     totalCommissionAmount: number;
+
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -93,6 +99,10 @@ export interface InvoiceItemDto {
     commission: number;
     price: number;
     amount: number;
+    currencyId: {
+        _id: string;
+        name: string
+    }
 }
 
 export interface CreateInvoiceDto {
@@ -120,31 +130,31 @@ export const invoiceApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllInvoices: build.query<Invoice[], void>({
             query: () => ({ url: '/admin/invoices/all', method: 'GET' }),
-            // providesTags: ['Invoice'],
+            providesTags: [TAG_TYPES.INVOICE],
         }),
         getInvoiceById: build.query<Invoice, string>({
             query: (id) => ({ url: `/admin/invoices/single/${id}`, method: 'GET' }),
-            // providesTags: (_r, _e, id) => [{ type: 'Invoice', id }],
+            providesTags: (_r, _e, id) => [{ type: TAG_TYPES.INVOICE, id }],
         }),
         getInvoicesByClient: build.query<Invoice[], string>({
             query: (clientId) => ({ url: `/admin/invoices/by-client/${clientId}`, method: 'GET' }),
-            // providesTags: ['Invoice'],
+            providesTags: [TAG_TYPES.INVOICE],
         }),
         createInvoice: build.mutation<Invoice, CreateInvoiceDto>({
             query: (data) => ({ url: '/admin/invoices/create', method: 'POST', data }),
-            // invalidatesTags: ['Invoice'],
+            invalidatesTags: [TAG_TYPES.INVOICE],
         }),
         updateInvoice: build.mutation<Invoice, { id: string; data: UpdateInvoiceDto }>({
             query: ({ id, data }) => ({ url: `/admin/invoices/update/${id}`, method: 'PATCH', data }),
-            // invalidatesTags: (_r, _e, { id }) => ['Invoice', { type: 'Invoice', id }],
+            invalidatesTags: (_r, _e, { id }) => [TAG_TYPES.INVOICE, { type: TAG_TYPES.INVOICE, id }],
         }),
         deleteInvoice: build.mutation<{ message: string }, string>({
             query: (id) => ({ url: `/admin/invoices/delete/${id}`, method: 'DELETE' }),
-            // invalidatesTags: ['Invoice'],
+            invalidatesTags: [TAG_TYPES.INVOICE],
         }),
         toggleInvoiceStatus: build.mutation<Invoice, string>({
             query: (id) => ({ url: `/invoices/${id}/toggle-status`, method: 'PATCH' }),
-            // invalidatesTags: ['Invoice'],
+            invalidatesTags: [TAG_TYPES.INVOICE],
         }),
     }),
 });

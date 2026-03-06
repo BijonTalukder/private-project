@@ -1,4 +1,4 @@
-import { baseApi } from "../baseApi";
+import { baseApi, TAG_TYPES } from "../baseApi";
 
 export interface Permission {
     menuId: string;
@@ -59,7 +59,7 @@ export const adminApi = baseApi.injectEndpoints({
                 url: '/admin/all',
                 method: "GET"
             }),
-            // providesTags: ['Admin']
+            providesTags: [TAG_TYPES.ADMIN]
         }),
 
         getAdminById: build.query<Admin, string>({
@@ -67,7 +67,7 @@ export const adminApi = baseApi.injectEndpoints({
                 url: `/admin/single/${id}`,
                 method: "GET"
             }),
-            // providesTags: (_result, _error, id) => [{ type: 'Admin', id }]
+            providesTags: (_result, _error, id) => [{ type: TAG_TYPES.ADMIN, id }]
         }),
 
         createAdmin: build.mutation<Admin, CreateAdminDto>({
@@ -76,7 +76,7 @@ export const adminApi = baseApi.injectEndpoints({
                 method: "POST",
                 data
             }),
-            // invalidatesTags: ['Admin']
+            invalidatesTags: [TAG_TYPES.ADMIN]
         }),
 
         updateAdmin: build.mutation<Admin, { id: string; data: UpdateAdminDto }>({
@@ -85,10 +85,10 @@ export const adminApi = baseApi.injectEndpoints({
                 method: "PATCH",
                 data
             }),
-            // invalidatesTags: (_result, _error, { id }) => [
-            //     'Admin',
-            //     { type: 'Admin', id }
-            // ]
+            invalidatesTags: (_result, _error, { id }) => [
+                TAG_TYPES.ADMIN,
+                { type: TAG_TYPES.ADMIN, id }
+            ]
         }),
 
         deleteAdmin: build.mutation<{ message: string }, string>({
@@ -96,7 +96,7 @@ export const adminApi = baseApi.injectEndpoints({
                 url: `/admin/delete/${id}`,
                 method: "DELETE"
             }),
-            // invalidatesTags: ['Admin']
+            invalidatesTags: [TAG_TYPES.ADMIN]
         }),
 
         toggleAdminStatus: build.mutation<Admin, string>({
@@ -104,7 +104,7 @@ export const adminApi = baseApi.injectEndpoints({
                 url: `/admin/admins/${id}/toggle-status`,
                 method: "PATCH"
             }),
-            // invalidatesTags: ['Admin']
+            invalidatesTags: [TAG_TYPES.ADMIN]
         }),
 
 
