@@ -19,7 +19,7 @@ export class CronJobService {
         // 👉 2 ta API
         const apis = [
             // 1️⃣ Own server ping (sleep prevent)
-            'https://private-project-ur1i.onrender.com/health',
+            // 'https://private-project-ur1i.onrender.com/health',
 
             // 2️⃣ Monitoring ping
             'https://cron-backend-one.vercel.app/api/ping/98b211f0-84cf-4b4a-849f-a988b3e16a6f',

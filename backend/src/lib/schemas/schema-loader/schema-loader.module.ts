@@ -19,6 +19,7 @@ import { Invoice, InvoiceSchema } from "../invoice.schema";
 import { InvoiceItem, InvoiceItemSchema } from "../invoice-item.schema";
 import { DeliveryChallan, DeliveryChallanSchema } from "../delivery-challan.schema";
 import { DeliveryChallanItem, DeliveryChallanItemSchema } from "../delivery-challan-item.schema";
+import { CurrencyConversion, CurrencyConversionSchema } from "../currency-conversion";
 
 @Global()
 @Module({
@@ -99,7 +100,12 @@ import { DeliveryChallanItem, DeliveryChallanItemSchema } from "../delivery-chal
             {
                 name: DeliveryChallanItem.name,
                 schema: DeliveryChallanItemSchema
+            },
+            {
+                name: CurrencyConversion.name,
+                schema: CurrencyConversionSchema
             }
+
 
 
 

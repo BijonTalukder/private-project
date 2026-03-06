@@ -27,10 +27,12 @@ export class SupplierPurchasePriceListService {
                     { path: 'unitId', select: 'unitId name' },
                     { path: 'gsmId', select: 'gsmId name' },
                 ],
-            });
+            })
+            .populate('currencyId', 'currencyId name type');
     }
 
     async create(dto: CreateSupplierPurchasePriceListDto) {
+        console.log(dto)
         if (!Types.ObjectId.isValid(dto.supplierId))
             throw new BadRequestException('Invalid supplier ID');
         if (!Types.ObjectId.isValid(dto.purchaseItemInfoId))

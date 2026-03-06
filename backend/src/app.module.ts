@@ -7,6 +7,7 @@ import { SchemaLoaderModule } from './lib/schemas/schema-loader/schema-loader.mo
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CronJobModule } from './lib/schedule/cron-job.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     DatabaseModule.register(),
 
     AdministratorModule,
+    CronJobModule
 
   ],
   controllers: [AppController],

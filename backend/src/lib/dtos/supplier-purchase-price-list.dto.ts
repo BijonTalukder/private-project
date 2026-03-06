@@ -1,54 +1,65 @@
-import {
-    IsBoolean,
-    IsDateString,
-    IsMongoId,
-    IsNumber,
-    IsOptional,
-    Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-
+// Create DTO
 export class CreateSupplierPurchasePriceListDto {
-    @IsMongoId()
     supplierId: string;
-
-    @IsMongoId()
     purchaseItemInfoId: string;
-
-    @IsNumber()
-    @Min(0)
-    @Type(() => Number)
+    currencyId: string; // ✅ Added
     purchaseRate: number;
-
-    @IsOptional()
-    @IsBoolean()
+    commission?: number; // ✅ Added (optional, default 0)
     isActive?: boolean;
-
-    @IsOptional()
-    @IsDateString()
-    closeDate?: string | null;
+    closeDate?: Date | null;
 }
 
+// Update DTO
 export class UpdateSupplierPurchasePriceListDto {
-    @IsOptional()
-    @IsMongoId()
     supplierId?: string;
-
-    @IsOptional()
-    @IsMongoId()
     purchaseItemInfoId?: string;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    @Type(() => Number)
+    currencyId?: string; // ✅ Added
     purchaseRate?: number;
-
-    @IsOptional()
-    @IsBoolean()
+    commission?: number; // ✅ Added
     isActive?: boolean;
+    closeDate?: Date | null;
+}
 
-    @IsOptional()
-    @IsDateString()
-    closeDate?: string | null;
+// Response DTO (with populated fields)
+export interface SupplierPurchasePriceListResponse {
+    _id: string;
+    priceListId: string;
+    supplierId: {
+        _id: string;
+        supplierId: string;
+        supplierName: string;
+        phone: string;
+        contactPerson?: string;
+    };
+    purchaseItemInfoId: {
+        _id: string;
+        purchaseItemId: string;
+        articleNo: string;
+        colorId: {
+            _id: string;
+            name: string;
+            type: string;
+        };
+        gsmId: {
+            _id: string;
+            name: string;
+        };
+        unitId: {
+            _id: string;
+            name: string;
+        };
+        finishGoodsId: string;
+    };
+    currencyId: {
+        _id: string;
+        currencyId: string;
+        name: string;
+        type: string;
+    };
+    purchaseRate: number;
+    commission: number;
+    isActive: boolean;
+    closeDate: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
 }

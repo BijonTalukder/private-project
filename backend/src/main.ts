@@ -8,6 +8,7 @@ async function bootstrap() {
     origin: '*', // dev phase
     credentials: true,
   });
+  app.setGlobalPrefix('api');
   // app.use(
   //   cors({
   //     origin:

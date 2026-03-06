@@ -17,6 +17,7 @@ import { PaymentInfoModule } from "./payment-info/payment-info.module";
 import { BankInfoModule } from "./bank-info/bank-info.module";
 import { InvoiceModule } from "./invoice/invoice.module";
 import { DeliveryChallanModule } from "./delivery-challan/delivery-challan.module";
+import { CurrencyConversionModule } from "./currency-convert/currency-conversion.module";
 
 @Module({
     imports: [
@@ -37,7 +38,8 @@ import { DeliveryChallanModule } from "./delivery-challan/delivery-challan.modul
         PaymentInfoModule,
         BankInfoModule,
         InvoiceModule,
-        DeliveryChallanModule
+        DeliveryChallanModule,
+        CurrencyConversionModule
     ],
     providers: []
 })

@@ -14,8 +14,14 @@ export class SupplierPurchasePriceList extends Document {
     @Prop({ type: Types.ObjectId, ref: 'PurchaseItemInfo', required: true })
     purchaseItemInfoId: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'CurrencyInfo', required: true })
+    currencyId: Types.ObjectId;
+
     @Prop({ required: true, type: Number, min: 0 })
     purchaseRate: number;
+
+    @Prop({ type: Number, min: 0, default: 0 })
+    commission: number;
 
     @Prop({ default: true })
     isActive: boolean;
@@ -32,11 +38,11 @@ SupplierPurchasePriceListSchema.pre('save', async function () {
         const count = await this.model('SupplierPurchasePriceList').countDocuments();
         this.priceListId = `SPL-${String(count + 1).padStart(5, '0')}`;
     }
-    // next();
 });
 
 // Indexes
 SupplierPurchasePriceListSchema.index({ supplierId: 1 });
 SupplierPurchasePriceListSchema.index({ purchaseItemInfoId: 1 });
+SupplierPurchasePriceListSchema.index({ currencyId: 1 });
 SupplierPurchasePriceListSchema.index({ isActive: 1 });
 SupplierPurchasePriceListSchema.index({ closeDate: 1 });

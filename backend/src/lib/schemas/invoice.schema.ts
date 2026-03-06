@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { generateSerial } from '../utils/generateSerial';
 
 @Schema({ timestamps: true })
 export class Invoice extends Document {
     @Prop({ unique: true, })
     invoiceId: string; // INV-00001
 
-    @Prop({ required: true, trim: true, unique: true })
+    @Prop({ trim: true, unique: true })
     invoiceNo: string;
 
     @Prop({ type: Types.ObjectId, ref: 'Client', required: true })
@@ -38,8 +39,9 @@ export const InvoiceSchema = SchemaFactory.createForClass(Invoice);
 
 InvoiceSchema.pre('save', async function () {
     if (!this.invoiceId) {
-        const count = await this.model('Invoice').countDocuments();
-        this.invoiceId = `INV-${String(count + 1).padStart(5, '0')}`;
+        const serial = await generateSerial(this.model('Invoice'), 'ANI', 'invoiceId');
+        this.invoiceNo = serial
+        this.invoiceId = serial;
     }
     // next();
 });
