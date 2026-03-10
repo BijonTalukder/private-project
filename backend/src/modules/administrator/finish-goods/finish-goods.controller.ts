@@ -22,6 +22,12 @@ export class FinishGoodsController {
         return this.finishGoodsService.create(dto);
     }
 
+    @Post("bulk-create")
+    createMany(@Body() dto: CreateFinishGoodsDto[]) {
+        return this.finishGoodsService.createMany(dto);
+    }
+
+
     @Get("all")
     findAll() {
         return this.finishGoodsService.findAll();

@@ -18,6 +18,9 @@ export class CreatePurchaseItemInfoDto {
     unitId: string;
 
     @IsMongoId()
+    widthId: string;
+
+    @IsMongoId()
     gsmId: string;
 
     @IsOptional()
@@ -46,6 +49,9 @@ export class UpdatePurchaseItemInfoDto {
     @IsOptional()
     @IsMongoId()
     gsmId?: string;
+    @IsOptional()
+    @IsMongoId()
+    widthId: string;
 
     @IsOptional()
     @IsBoolean()

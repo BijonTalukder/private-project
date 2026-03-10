@@ -75,47 +75,18 @@ export class InvoiceService {
     async findAll() {
         return this.invoiceModel.aggregate([
             { $sort: { createdAt: -1 } },
-            // Lookup client
-            {
-                $lookup: {
-                    from: 'clients',
-                    localField: 'clientId',
-                    foreignField: '_id',
-                    as: 'client',
-                },
-            },
+
+            // ── Header lookups ─────────────────────────────────────────────────────
+            { $lookup: { from: 'clients', localField: 'clientId', foreignField: '_id', as: 'client' } },
             { $unwind: '$client' },
-            // Lookup currency
-            {
-                $lookup: {
-                    from: 'currencyinfos',
-                    localField: 'currencyId',
-                    foreignField: '_id',
-                    as: 'currency',
-                },
-            },
+            { $lookup: { from: 'currencyinfos', localField: 'currencyId', foreignField: '_id', as: 'currency' } },
             { $unwind: '$currency' },
-            // Lookup payment
-            {
-                $lookup: {
-                    from: 'paymentinfos',
-                    localField: 'paymentId',
-                    foreignField: '_id',
-                    as: 'payment',
-                },
-            },
+            { $lookup: { from: 'paymentinfos', localField: 'paymentId', foreignField: '_id', as: 'payment' } },
             { $unwind: '$payment' },
-            // Lookup bank
-            {
-                $lookup: {
-                    from: 'bankinfos',
-                    localField: 'bankId',
-                    foreignField: '_id',
-                    as: 'bank',
-                },
-            },
+            { $lookup: { from: 'bankinfos', localField: 'bankId', foreignField: '_id', as: 'bank' } },
             { $unwind: '$bank' },
-            // Lookup invoice items
+
+            // ── Invoice items ──────────────────────────────────────────────────────
             {
                 $lookup: {
                     from: 'invoiceitems',
@@ -124,7 +95,8 @@ export class InvoiceService {
                     as: 'items',
                 },
             },
-            // Lookup nested data in items
+
+            // ── Flat lookups for item sub-documents ────────────────────────────────
             {
                 $lookup: {
                     from: 'finishgoods',
@@ -141,7 +113,117 @@ export class InvoiceService {
                     as: 'priceListData',
                 },
             },
-            // Add nested data to items
+
+            // ── ROOT CAUSE FIX ─────────────────────────────────────────────────────
+            // finishGoodsData.colorId / unitId / gsmId / widthId are stored as plain
+            // strings in the DB. $lookup compares them against ObjectId _id fields
+            // and gets no match → colorData: [], unitData: [], etc.
+            // Solution: add *IdObj helper fields converted via $toObjectId first.
+            {
+                $addFields: {
+                    finishGoodsData: {
+                        $map: {
+                            input: '$finishGoodsData',
+                            as: 'fg',
+                            in: {
+                                $mergeObjects: [
+                                    '$$fg',
+                                    {
+                                        colorIdObj: { $toObjectId: '$$fg.colorId' },
+                                        unitIdObj: { $toObjectId: '$$fg.unitId' },
+                                        gsmIdObj: { $toObjectId: '$$fg.gsmId' },
+                                        widthIdObj: { $toObjectId: '$$fg.widthId' },
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+
+            // ── Lookup using converted ObjectId fields ─────────────────────────────
+            {
+                $lookup: {
+                    from: 'colors',
+                    localField: 'finishGoodsData.colorIdObj',
+                    foreignField: '_id',
+                    as: 'colorData',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'units',
+                    localField: 'finishGoodsData.unitIdObj',
+                    foreignField: '_id',
+                    as: 'unitData',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'gsms',
+                    localField: 'finishGoodsData.gsmIdObj',
+                    foreignField: '_id',
+                    as: 'gsmData',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'widths',
+                    localField: 'finishGoodsData.widthIdObj',
+                    foreignField: '_id',
+                    as: 'widthData',
+                },
+            },
+
+            // ── Merge color/unit/gsm/width objects into each finishGood ───────────
+            {
+                $addFields: {
+                    finishGoodsData: {
+                        $map: {
+                            input: '$finishGoodsData',
+                            as: 'fg',
+                            in: {
+                                $mergeObjects: [
+                                    '$$fg',
+                                    {
+                                        colorId: {
+                                            $arrayElemAt: [
+                                                { $filter: { input: '$colorData', cond: { $eq: ['$$this._id', '$$fg.colorIdObj'] } } },
+                                                0,
+                                            ],
+                                        },
+                                        unitId: {
+                                            $arrayElemAt: [
+                                                { $filter: { input: '$unitData', cond: { $eq: ['$$this._id', '$$fg.unitIdObj'] } } },
+                                                0,
+                                            ],
+                                        },
+                                        gsmId: {
+                                            $arrayElemAt: [
+                                                { $filter: { input: '$gsmData', cond: { $eq: ['$$this._id', '$$fg.gsmIdObj'] } } },
+                                                0,
+                                            ],
+                                        },
+                                        widthId: {
+                                            $arrayElemAt: [
+                                                { $filter: { input: '$widthData', cond: { $eq: ['$$this._id', '$$fg.widthIdObj'] } } },
+                                                0,
+                                            ],
+                                        },
+                                        // Remove helper fields from output
+                                        colorIdObj: '$$REMOVE',
+                                        unitIdObj: '$$REMOVE',
+                                        gsmIdObj: '$$REMOVE',
+                                        widthIdObj: '$$REMOVE',
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+
+            // ── Merge enriched finishGoods + priceList into each item ──────────────
             {
                 $addFields: {
                     items: {
@@ -154,23 +236,13 @@ export class InvoiceService {
                                     {
                                         finishGoods: {
                                             $arrayElemAt: [
-                                                {
-                                                    $filter: {
-                                                        input: '$finishGoodsData',
-                                                        cond: { $eq: ['$$this._id', '$$item.finishGoodsId'] },
-                                                    },
-                                                },
+                                                { $filter: { input: '$finishGoodsData', cond: { $eq: ['$$this._id', '$$item.finishGoodsId'] } } },
                                                 0,
                                             ],
                                         },
                                         priceList: {
                                             $arrayElemAt: [
-                                                {
-                                                    $filter: {
-                                                        input: '$priceListData',
-                                                        cond: { $eq: ['$$this._id', '$$item.supplierPurchasePriceId'] },
-                                                    },
-                                                },
+                                                { $filter: { input: '$priceListData', cond: { $eq: ['$$this._id', '$$item.supplierPurchasePriceId'] } } },
                                                 0,
                                             ],
                                         },
@@ -181,8 +253,18 @@ export class InvoiceService {
                     },
                 },
             },
-            // Remove temporary arrays
-            { $project: { finishGoodsData: 0, priceListData: 0 } },
+
+            // ── Clean up temp arrays ───────────────────────────────────────────────
+            {
+                $project: {
+                    finishGoodsData: 0,
+                    priceListData: 0,
+                    colorData: 0,
+                    unitData: 0,
+                    gsmData: 0,
+                    widthData: 0,
+                },
+            },
         ]);
     }
 

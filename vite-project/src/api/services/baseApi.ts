@@ -40,6 +40,12 @@ export const baseApi = createApi({
     baseQuery: axiosBaseQuery({
         baseUrl: 'http://test-api.shuvadebnathbd.com/api'
     }),
+    keepUnusedDataFor: 300,
+    // ✅ Don't refetch just because component remounted
+    // refetchOnMountOrArgChange: false,
+    // ✅ Only refetch on focus if data is stale (>60s old)
+    refetchOnFocus: false,
+    refetchOnReconnect: true,
     tagTypes: tagTypesArray,
 
     endpoints: (builder) => ({

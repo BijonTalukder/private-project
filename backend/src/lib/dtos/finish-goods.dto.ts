@@ -13,6 +13,8 @@ export class CreateFinishGoodsDto {
 
     @IsMongoId()
     colorId: string;
+    @IsMongoId()
+    widthId: string;
 
     @IsMongoId()
     unitId: string;
@@ -38,6 +40,10 @@ export class UpdateFinishGoodsDto {
     @IsOptional()
     @IsMongoId()
     unitId?: string;
+
+    @IsOptional()
+    @IsMongoId()
+    widthId: string;
 
     @IsOptional()
     @IsMongoId()

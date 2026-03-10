@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { generateNextId } from '../utils/generate-id.util';
 
 @Schema({ timestamps: true })
 export class SupplierPurchasePriceList extends Document {
@@ -35,8 +36,15 @@ export const SupplierPurchasePriceListSchema = SchemaFactory.createForClass(Supp
 // Pre-save hook to auto-generate priceListId
 SupplierPurchasePriceListSchema.pre('save', async function () {
     if (!this.priceListId) {
-        const count = await this.model('SupplierPurchasePriceList').countDocuments();
-        this.priceListId = `SPL-${String(count + 1).padStart(5, '0')}`;
+
+
+        this.priceListId = await generateNextId(
+            this.model('SupplierPurchasePriceList'),
+            'priceListId',
+            'SPL',
+        );
+        // const count = await this.model('SupplierPurchasePriceList').countDocuments();
+        // this.priceListId = `SPL-${String(count + 1).padStart(5, '0')}`;
     }
 });
 

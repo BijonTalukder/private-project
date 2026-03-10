@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cors from 'cors';
+import { seedPurchaseItems } from './lib/config/seed-purchase-item';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,6 +10,10 @@ async function bootstrap() {
     credentials: true,
   });
   app.setGlobalPrefix('api');
+
+  // seedPurchaseItems().catch((err) => {
+  //   console.error(err);
+  // });
   // app.use(
   //   cors({
   //     origin:

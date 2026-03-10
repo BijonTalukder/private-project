@@ -6,7 +6,11 @@ export interface PopulatedColor {
     name: string;
     type: string;
 }
-
+export interface PopulateWidth {
+    _id: string;
+    widthId: string;
+    name: string
+}
 export interface PopulatedUnit {
     _id: string;
     unitId: string;
@@ -26,6 +30,7 @@ export interface FinishGoods {
     colorId: PopulatedColor;
     unitId: PopulatedUnit;
     gsmId: PopulatedGSM;
+    widthId: PopulateWidth
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -36,6 +41,7 @@ export interface CreateFinishGoodsDto {
     colorId: string;
     unitId: string;
     gsmId: string;
+    widthId: string;
     isActive?: boolean;
 }
 
@@ -43,6 +49,7 @@ export interface UpdateFinishGoodsDto {
     articleNo?: string;
     colorId?: string;
     unitId?: string;
+    widthId?: string
     gsmId?: string;
     isActive?: boolean;
 }
@@ -105,6 +112,22 @@ export const finishGoodsApi = baseApi.injectEndpoints({
             invalidatesTags: [TAG_TYPES.FINISH_GOODS]
         }),
 
+        createManyFinishGoods: build.mutation<
+            {
+                created: FinishGoods[];
+                errors: { index: number; articleNo: string; message: string }[];
+                summary: { total: number; success: number; failed: number };
+            },
+            CreateFinishGoodsDto[]          // ← plain array, no wrapper
+        >({
+            query: (dtos) => ({
+                url: '/admin/finish-goods/bulk-create',
+                method: 'POST',
+                data: dtos,                 // ← send array directly as body
+            }),
+            invalidatesTags: [TAG_TYPES.FINISH_GOODS],
+        }),
+
         updateFinishGoods: build.mutation<FinishGoods, { id: string; data: UpdateFinishGoodsDto }>({
             query: ({ id, data }) => ({
                 url: `/admin/finish-goods/update/${id}`,
@@ -145,5 +168,6 @@ export const {
     useCreateFinishGoodsMutation,
     useUpdateFinishGoodsMutation,
     useDeleteFinishGoodsMutation,
-    useToggleFinishGoodsStatusMutation
+    useToggleFinishGoodsStatusMutation,
+    useCreateManyFinishGoodsMutation
 } = finishGoodsApi;

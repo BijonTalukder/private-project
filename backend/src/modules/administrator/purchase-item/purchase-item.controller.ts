@@ -21,7 +21,10 @@ export class PurchaseItemInfoController {
     create(@Body() dto: CreatePurchaseItemInfoDto) {
         return this.purchaseItemInfoService.create(dto);
     }
-
+    @Post('bulk-create')
+    async createMany(@Body() dtos: CreatePurchaseItemInfoDto[]) {
+        return this.purchaseItemInfoService.createMany(dtos);
+    }
     @Get("all")
     findAll() {
         return this.purchaseItemInfoService.findAll();

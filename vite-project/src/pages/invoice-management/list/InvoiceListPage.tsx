@@ -26,6 +26,7 @@ import InvoiceFormModal from "../modal/InvoiceFormModal";
 import InvoiceViewModal from "./InvoiceViewModal";
 import InvoicePrintModal from "../print-invoice/InvoicePrintModal";
 import { getCurrencyConfig } from "../../../utils/currencyUtils";
+import { useGetAllSuppliersQuery } from "../../../api/services/supplier/supplierApi";
 
 const InvoiceListPage = () => {
     // ── RTK Query ──────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ const InvoiceListPage = () => {
     const { data: priceLists = [] } = useGetAllPriceListsQuery();
     const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
     const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
+    const { data: suppliers = [] } = useGetAllSuppliersQuery();
 
     // ── Local State ────────────────────────────────────────────────────────────
     const [filters, setFilters] = useState<InvoiceFilters>({});
@@ -472,7 +474,8 @@ const InvoiceListPage = () => {
                     payments={payments}
                     banks={banks}
                     finishGoods={finishGoods}
-                    priceLists={priceLists}
+                    // priceLists={priceLists}
+                    suppliers={suppliers}
                     isCreating={false}
                     isUpdating={isUpdating}
                     onSubmit={handleUpdate}

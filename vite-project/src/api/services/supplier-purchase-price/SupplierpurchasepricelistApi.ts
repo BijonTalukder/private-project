@@ -132,7 +132,7 @@ export const supplierPurchasePriceListApi = baseApi.injectEndpoints({
 
         togglePriceListStatus: build.mutation<SupplierPurchasePriceList, string>({
             query: (id) => ({
-                url: `/supplier-purchase-price-list/${id}/toggle-status`,
+                url: `/admin/supplier-purchase-price-list/${id}/toggle-status`,
                 method: 'PATCH',
             }),
             invalidatesTags: [TAG_TYPES.SUPPLIER_PURCHASE_PRICE],

@@ -16,14 +16,31 @@ export class FinishGoodsService {
         @InjectModel(FinishGoods.name)
         private finishGoodsModel: Model<FinishGoods>,
     ) { }
-
+    private validateIds(dto: CreateFinishGoodsDto) {
+        if (!Types.ObjectId.isValid(dto.colorId)) throw new BadRequestException('Invalid color ID');
+        if (!Types.ObjectId.isValid(dto.unitId)) throw new BadRequestException('Invalid unit ID');
+        if (!Types.ObjectId.isValid(dto.gsmId)) throw new BadRequestException('Invalid GSM ID');
+        if (!Types.ObjectId.isValid(dto.widthId)) throw new BadRequestException('Invalid width ID');
+    }
+    private get populateQuery() {
+        return [
+            { path: 'colorId', select: 'colorId name type' },
+            { path: 'unitId', select: 'unitId name' },
+            { path: 'gsmId', select: 'gsmId name' },
+            { path: 'widthId', select: 'widthId name' },
+        ];
+    }
     /**
      * Create new finish goods
      */
     async create(dto: CreateFinishGoodsDto) {
-        // Check if articleNo already exists
+        // Check if articleNo already exists ==>article no ,color width unit
         const existingArticle = await this.finishGoodsModel.findOne({
             articleNo: dto.articleNo,
+            colorId: dto.colorId,
+            widthId: dto.widthId,
+            unitId: dto.unitId
+
         });
         if (existingArticle) {
             throw new ConflictException('Article number already exists');
@@ -40,6 +57,11 @@ export class FinishGoodsService {
             throw new BadRequestException('Invalid GSM ID');
         }
 
+        if (!Types.ObjectId.isValid(dto.widthId)) {
+            throw new BadRequestException('Invalid Width ID');
+        }
+
+
         const finishGoods = await this.finishGoodsModel.create(dto);
 
         // Return with populated references
@@ -47,7 +69,58 @@ export class FinishGoodsService {
             .findById(finishGoods._id)
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
-            .populate('gsmId', 'gsmId name');
+            .populate('gsmId', 'gsmId name')
+            .populate("widthId", "widthId name")
+    }
+
+    async createMany(dtos: CreateFinishGoodsDto[]) {
+        if (!dtos || !Array.isArray(dtos) || dtos.length === 0) {
+            return {
+                created: [],
+                errors: [],
+                summary: { total: 0, success: 0, failed: 0 },
+            };
+        }
+
+        const results: FinishGoods[] = [];
+        const errors: { index: number; articleNo: string; message: string }[] = [];
+
+        for (let i = 0; i < dtos.length; i++) {
+            const dto = dtos[i];
+            try {
+                this.validateIds(dto);
+
+                const exists = await this.finishGoodsModel.findOne({
+                    articleNo: dto.articleNo,
+                    colorId: dto.colorId,
+                    widthId: dto.widthId,
+                    unitId: dto.unitId,
+                });
+                if (exists) {
+                    errors.push({ index: i, articleNo: dto.articleNo, message: 'Already exists' });
+                    continue;
+                }
+
+                const created = await this.finishGoodsModel.create(dto);
+                const populated = await this.finishGoodsModel
+                    .findById(created._id)
+                    .populate(this.populateQuery as any);
+
+                results.push(populated!);
+            } catch (err: any) {
+                errors.push({
+                    index: i,
+                    articleNo: dto.articleNo ?? `row-${i}`,
+                    message: err?.message ?? 'Unknown error',
+                });
+            }
+        }
+
+        return {
+            created: results,
+            errors,
+            summary: { total: dtos.length, success: results.length, failed: errors.length },
+        };
     }
 
     /**
@@ -59,6 +132,7 @@ export class FinishGoodsService {
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
             .populate('gsmId', 'gsmId name')
+            .populate("widthId", "widthId name")
             .sort({ createdAt: -1 });
     }
 
@@ -71,6 +145,7 @@ export class FinishGoodsService {
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
             .populate('gsmId', 'gsmId name')
+            .populate("widthId", "widthId name")
             .sort({ articleNo: 1 });
     }
 
@@ -82,7 +157,8 @@ export class FinishGoodsService {
             .findById(id)
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
-            .populate('gsmId', 'gsmId name');
+            .populate('gsmId', 'gsmId name')
+            .populate("widthId", "widthId name");
 
         if (!item) {
             throw new NotFoundException('Finish goods not found');
@@ -158,6 +234,7 @@ export class FinishGoodsService {
             .findById(id)
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
+            .populate("widthId", "widthId name")
             .populate('gsmId', 'gsmId name');
     }
 
@@ -171,6 +248,7 @@ export class FinishGoodsService {
             })
             .populate('colorId', 'colorId name type')
             .populate('unitId', 'unitId name')
+            .populate("widthId", "widthId name")
             .populate('gsmId', 'gsmId name');
     }
 

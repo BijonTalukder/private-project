@@ -16,11 +16,12 @@ import { useGetAllPaymentsQuery } from "../../api/services/payment-info/paymentI
 import { useGetAllCurrenciesQuery } from "../../api/services/currency/currencyInfoApi";
 import { useGetAllBanksQuery } from "../../api/services/bank-info/bankInfoApi";
 import { useGetAllFinishGoodsQuery } from "../../api/services/finish-goods/finishGoodsApi";
-import { useGetAllPriceListsQuery } from "../../api/services/supplier-purchase-price/SupplierpurchasepricelistApi";
+import { useGetAllPriceListsQuery, useGetPriceListsByPurchaseItemQuery } from "../../api/services/supplier-purchase-price/SupplierpurchasepricelistApi";
 import InvoiceFormModal from "./modal/InvoiceFormModal";
 import InvoiceViewModal from "./list/InvoiceViewModal";
 import { getCurrencyConfig } from "../../utils/currencyUtils";
 import InvoicePrintModal from "./print-invoice/InvoicePrintModal";
+import { useGetAllSuppliersQuery } from "../../api/services/supplier/supplierApi";
 
 const InvoiceManagement = () => {
     const { data: invoices = [], isLoading, refetch } = useGetAllInvoicesQuery();
@@ -30,7 +31,7 @@ const InvoiceManagement = () => {
     const { data: banks = [], isLoading: banksLoading } = useGetAllBanksQuery();
     const { data: finishGoods = [], isLoading: finishGoodsLoading } = useGetAllFinishGoodsQuery();
     const { data: priceLists = [], isLoading: priceListsLoading } = useGetAllPriceListsQuery();
-
+    const { data: suppliers = [] } = useGetAllSuppliersQuery();
     const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
     const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
     const [deleteInvoice, { isLoading: isDeleting }] = useDeleteInvoiceMutation();
@@ -292,7 +293,7 @@ const InvoiceManagement = () => {
                                                     {record.items.map((item, idx) => (
                                                         <tr key={idx}>
                                                             <td>{item.finishGoods.articleNo}</td>
-                                                            <td>{item.priceList.supplierId.supplierName}</td>
+                                                            <td>{item.priceList?.supplierId?.supplierName || ""}</td>
                                                             <td>{item.invoiceQty}</td>
                                                             <td>{currencyConfig.symbol}{item.unitPrice.toFixed(2)}</td>
                                                             <td>{currencyConfig.symbol}{item.commission.toFixed(2)}</td>
@@ -318,7 +319,7 @@ const InvoiceManagement = () => {
                     payments={payments}
                     banks={banks}
                     finishGoods={finishGoods}
-                    priceLists={priceLists}
+                    suppliers={suppliers}
                     isCreating={isCreating}
                     isUpdating={isUpdating}
                     onSubmit={editingInvoice ? handleUpdate : handleCreate}

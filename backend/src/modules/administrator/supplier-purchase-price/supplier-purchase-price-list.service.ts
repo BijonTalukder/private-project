@@ -38,7 +38,22 @@ export class SupplierPurchasePriceListService {
         if (!Types.ObjectId.isValid(dto.purchaseItemInfoId))
             throw new BadRequestException('Invalid purchase item info ID');
 
-        const record = await this.priceListModel.create(dto);
+        const isExist = await this.priceListModel.findOne({
+            supplierId: new Types.ObjectId(dto.supplierId),
+            purchaseItemInfoId: new Types.ObjectId(dto.purchaseItemInfoId),
+            isActive: true
+        })
+        if (isExist) {
+            throw new BadRequestException("For This Product Already Have Active Price.Please deactive it first ")
+        }
+
+        const record = await this.priceListModel.create({
+            ...dto,
+            supplierId: new Types.ObjectId(dto.supplierId),
+            purchaseItemInfoId: new Types.ObjectId(dto.purchaseItemInfoId),
+            currencyId: new Types.ObjectId(dto.currencyId)
+
+        });
         return this.populate(this.priceListModel.findById(record._id));
     }
 
@@ -87,8 +102,15 @@ export class SupplierPurchasePriceListService {
         if (dto.purchaseItemInfoId && !Types.ObjectId.isValid(dto.purchaseItemInfoId))
             throw new BadRequestException('Invalid purchase item info ID');
 
+        const updateData = {
+            ...dto,
+            ...(dto.supplierId && { supplierId: new Types.ObjectId(dto.supplierId) }),
+            ...(dto.purchaseItemInfoId && { purchaseItemInfoId: new Types.ObjectId(dto.purchaseItemInfoId) }),
+            ...(dto.currencyId && { currencyId: new Types.ObjectId(dto.currencyId) }),
+        };
+
         return this.populate(
-            this.priceListModel.findByIdAndUpdate(id, dto, { new: true }),
+            this.priceListModel.findByIdAndUpdate(id, updateData, { new: true }),
         );
     }
 

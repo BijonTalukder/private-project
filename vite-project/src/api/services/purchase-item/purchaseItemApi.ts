@@ -7,10 +7,35 @@ export interface PopulatedColor {
     name: string;
     type: string;
 }
-
+export interface BulkCreateResponse {
+    created: PurchaseItemInfo[];
+    finishGoodsCreated: Array<{
+        _id: string;
+        finishGoodsId: string;
+        articleNo: string;
+    }>;
+    errors: Array<{
+        index: number;
+        articleNo: string;
+        message: string;
+        step?: string;
+    }>;
+    summary: {
+        total: number;
+        purchaseItemsSuccess: number;
+        finishGoodsSuccess: number;
+        failed: number;
+    };
+}
 export interface PopulatedUnit {
     _id: string;
     unitId: string;
+    name: string;
+}
+
+export interface PopulatedWidth {
+    _id: string;
+    widthId: string;
     name: string;
 }
 
@@ -27,6 +52,7 @@ export interface PurchaseItemInfo {
     colorId: PopulatedColor;
     unitId: PopulatedUnit;
     gsmId: PopulatedGSM;
+    widthId: PopulatedWidth
     isSameAsFinishGood: boolean;
     isActive: boolean;
     createdAt: string;
@@ -38,6 +64,7 @@ export interface CreatePurchaseItemInfoDto {
     colorId: string;
     unitId: string;
     gsmId: string;
+    widthId: string;
     isSameAsFinishGood?: boolean;
     isActive?: boolean;
 }
@@ -47,6 +74,7 @@ export interface UpdatePurchaseItemInfoDto {
     colorId?: string;
     unitId?: string;
     gsmId?: string;
+    widthId?: string;
     isSameAsFinishGood?: boolean;
     isActive?: boolean;
 }
@@ -101,7 +129,21 @@ export const purchaseItemInfoApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: [TAG_TYPES.PURCHASE_ITEM]
         }),
-
+        createManyPurchaseItems: build.mutation<
+            {
+                created: PurchaseItemInfo[];
+                errors: { index: number; articleNo: string; message: string }[];
+                summary: { total: number; success: number; failed: number };
+            },
+            CreatePurchaseItemInfoDto[]
+        >({
+            query: (dtos) => ({
+                url: '/admin/purchase-item-info/bulk-create',
+                method: 'POST',
+                data: dtos,           // ← plain array, no wrapper
+            }),
+            invalidatesTags: [TAG_TYPES.PURCHASE_ITEM],
+        }),
         updatePurchaseItem: build.mutation<PurchaseItemInfo, { id: string; data: UpdatePurchaseItemInfoDto }>({
             query: ({ id, data }) => ({
                 url: `/admin/purchase-item-info/update/${id}`,
@@ -150,5 +192,6 @@ export const {
     useUpdatePurchaseItemMutation,
     useDeletePurchaseItemMutation,
     useTogglePurchaseItemStatusMutation,
-    useToggleSameAsFinishGoodMutation
+    useToggleSameAsFinishGoodMutation,
+    useCreateManyPurchaseItemsMutation
 } = purchaseItemInfoApi;

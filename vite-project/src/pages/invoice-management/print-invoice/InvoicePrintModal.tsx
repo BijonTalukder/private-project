@@ -1,8 +1,9 @@
 import { Modal, Button, Space, message } from "antd";
-import { PrinterOutlined, CloseOutlined, DownloadOutlined } from "@ant-design/icons";
+import { PrinterOutlined, CloseOutlined } from "@ant-design/icons";
 import type { Invoice } from "../../../api/services/invoice/invoiceApi";
 import dayjs from "dayjs";
 import { getCurrencyConfig } from "../../../utils/currencyUtils";
+import companyLogo from "../../../assets/company-logo.jpeg";
 
 interface InvoicePrintModalProps {
     invoice: Invoice | null;
@@ -10,25 +11,29 @@ interface InvoicePrintModalProps {
     onClose: () => void;
 }
 
+const COMPANY = {
+    name: "ANISHA TEX TRADE CORPORATION",
+    logoUrl: companyLogo,
+};
+
 const InvoicePrintModal = ({ invoice, open, onClose }: InvoicePrintModalProps) => {
     if (!invoice) return null;
 
     const currencyConfig = getCurrencyConfig(invoice.currency.name);
+    const sym = currencyConfig.symbol;
 
-    // Convert number to words
+    // ── Number to words ───────────────────────────────────────────────────────
     const numberToWords = (num: number): string => {
         const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
         const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
         const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
 
-        if (num === 0) return 'Zero';
-
-        const convertLessThanThousand = (n: number): string => {
+        const cvt = (n: number): string => {
             if (n === 0) return '';
             if (n < 10) return ones[n];
             if (n < 20) return teens[n - 10];
-            if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
-            return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + convertLessThanThousand(n % 100) : '');
+            if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+            return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + cvt(n % 100) : '');
         };
 
         const convert = (n: number): string => {
@@ -36,48 +41,72 @@ const InvoicePrintModal = ({ invoice, open, onClose }: InvoicePrintModalProps) =
             const lakh = Math.floor(n / 100000);
             const thousand = Math.floor((n % 100000) / 1000);
             const remainder = n % 1000;
-            let result = '';
-            if (lakh > 0) result += convertLessThanThousand(lakh) + ' Lakh ';
-            if (thousand > 0) result += convertLessThanThousand(thousand) + ' Thousand ';
-            if (remainder > 0) result += convertLessThanThousand(remainder);
-            return result.trim();
+            let r = '';
+            if (lakh) r += cvt(lakh) + ' Lakh ';
+            if (thousand) r += cvt(thousand) + ' Thousand ';
+            if (remainder) r += cvt(remainder);
+            return r.trim();
         };
 
-        const integerPart = Math.floor(num);
-        const decimalPart = Math.round((num - integerPart) * 100);
-        let words = convert(integerPart);
-        if (decimalPart > 0) words += ' and ' + convertLessThanThousand(decimalPart) + ' Paisa';
+        const intPart = Math.floor(num);
+        const decPart = Math.round((num - intPart) * 100);
+        let words = convert(intPart);
+        if (decPart > 0) words += ' and ' + cvt(decPart) + ' Paisa';
         return words + ' Only';
     };
 
-    const handlePrint = () => {
+    // ── handlePrint is async — converts logo to base64 first ─────────────────
+    // Bundled asset URLs (e.g. /assets/logo-abc123.jpeg) don't resolve inside
+    // a window.open() context. Embedding as base64 data URI solves this.
+    const handlePrint = async () => {
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             message.error('Please allow popups to print');
             return;
         }
 
-        const itemsHtml = invoice.items.map((item, idx) => `
-            <tr>
-                <td>${item.finishGoods.articleNo}</td>
-                <td>${item.priceList.supplierId.supplierId}</td>
-                <td>${dayjs(invoice.createdAt).format("DD.MM.YYYY")}</td>
-                <td>${item.finishGoods.articleNo}</td>
-                <td>${item.finishGoods.colorId.name}</td>
-                <td style="text-align: right;">${item.invoiceQty}</td>
-                <td style="text-align: right;">${item.unitPrice.toFixed(2)}</td>
-                <td style="text-align: right;">${item.amount.toFixed(2)}</td>
-            </tr>
-        `).join('');
+        // ✅ Convert logo to inline base64 data URI
+        let logoBase64 = '';
+        if (COMPANY.logoUrl) {
+            try {
+                const res = await fetch(COMPANY.logoUrl);
+                const blob = await res.blob();
+                logoBase64 = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = () => resolve('');
+                    reader.readAsDataURL(blob);
+                });
+            } catch {
+                logoBase64 = '';
+            }
+        }
 
-        // Add empty rows
-        const emptyRows = Math.max(0, 3 - invoice.items.length);
-        const emptyRowsHtml = Array(emptyRows).fill('').map(() => `
-            <tr class="empty-row">
-                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-            </tr>
-        `).join('');
+        const logoHtml = logoBase64
+            ? `<img src="${logoBase64}" alt="Logo" style="height:80px; object-fit:contain; display:block; margin:0 auto 6px;" />`
+            : `<div style="font-size:24px; font-weight:bold; letter-spacing:2px;">${COMPANY.name}</div>`;
+
+        // ── Build item rows ───────────────────────────────────────────────────
+        const itemsHtml = invoice.items.map((item) => {
+            const color = item.finishGoods?.colorId?.name ?? '—';
+            const unit = item.finishGoods?.unitId?.name ?? '—';
+            const gsm = item.finishGoods?.gsmId?.name ?? '—';
+            const width = item.finishGoods?.widthId?.name
+                ?? (item.finishGoods?.width != null ? String(item.finishGoods.width) : '—');
+
+            return `
+            <tr>
+                <td>${item.finishGoods?.articleNo ?? '—'}</td>
+                <td>${color}</td>
+                <td>${gsm}</td>
+                <td>${width}</td>
+                <td>${unit}</td>
+                <td>${item.invoiceQty}</td>
+                <td>${sym}${item.unitPrice.toFixed(2)}</td>
+                <td>${sym}${item.commission.toFixed(2)}</td>
+                <td>${sym}${item.amount.toFixed(2)}</td>
+            </tr>`;
+        }).join('');
 
         printWindow.document.write(`
             <!DOCTYPE html>
@@ -86,313 +115,197 @@ const InvoicePrintModal = ({ invoice, open, onClose }: InvoicePrintModalProps) =
                 <title>Invoice - ${invoice.invoiceNo}</title>
                 <meta charset="UTF-8">
                 <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-
-                    body {
-                        font-family: 'Times New Roman', Times, serif;
-                        padding: 40px;
-                        background: white;
-                    }
+                    * { margin:0; padding:0; box-sizing:border-box; }
+                    body { font-family:'Times New Roman', Times, serif; padding:30px; background:white; font-size:13px; }
 
                     .print-controls {
-                        text-align: center;
-                        margin-bottom: 30px;
-                        padding: 20px;
-                        background: #f5f5f5;
-                        border-radius: 8px;
+                        text-align:center; margin-bottom:24px; padding:16px;
+                        background:#f5f5f5; border-radius:8px;
                     }
-
                     .print-controls button {
-                        margin: 0 10px;
-                        padding: 10px 30px;
-                        font-size: 16px;
-                        cursor: pointer;
-                        border: none;
-                        border-radius: 6px;
+                        margin:0 8px; padding:10px 28px; font-size:15px;
+                        cursor:pointer; border:none; border-radius:6px;
+                    }
+                    .btn-print { background:linear-gradient(to right,#667eea,#764ba2); color:white; }
+                    .btn-close { background:#d9d9d9; color:#333; }
+
+                    .invoice-wrapper { border:2px solid #000; }
+
+                    .company-header {
+                        text-align:center;
+                        padding:20px 40px 16px;
+                        border-bottom:2px solid #000;
+                    }
+                    .company-header .company-name {
+                        font-size:20px; font-weight:bold; letter-spacing:1px; margin-top:4px;
                     }
 
-                    .btn-print {
-                        background: linear-gradient(to right, #667eea, #764ba2);
-                        color: white;
+                    .invoice-title {
+                        text-align:center; padding:14px 0 10px;
+                        font-size:26px; font-weight:bold;
+                        text-decoration:underline; letter-spacing:4px;
+                        border-bottom:1px solid #ccc;
                     }
 
-                    .btn-download {
-                        background: #52c41a;
-                        color: white;
-                    }
+                    .info-section { padding:14px 30px; border-bottom:1px solid #ccc; }
+                    .info-table { width:100%; border-collapse:collapse; }
+                    .info-table td { padding:3px 0; }
+                    .info-table .lbl { width:110px; font-weight:bold; }
+                    .info-table .col { width:18px; }
 
-                    .btn-close {
-                        background: #d9d9d9;
-                        color: #333;
-                    }
-
-                    .invoice-container {
-                        background: white;
-                        border: 2px solid #000;
-                        padding: 40px;
-                    }
-
-                    .invoice-header {
-                        text-align: center;
-                        margin-bottom: 30px;
-                    }
-
-                    .invoice-header h1 {
-                        font-size: 32px;
-                        font-weight: bold;
-                        text-decoration: underline;
-                        letter-spacing: 3px;
-                    }
-
-                    .info-table {
-                        width: 100%;
-                        margin-bottom: 30px;
-                    }
-
-                    .info-table td {
-                        padding: 4px 0;
-                        border: none;
-                    }
-
-                    .info-table .label {
-                        width: 120px;
-                        font-weight: bold;
-                    }
-
-                    .info-table .colon {
-                        width: 20px;
-                    }
-
+                    .items-section { padding:0 30px; }
                     .items-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        border: 1px solid #000;
-                        margin-bottom: 20px;
+                        width:100%; border-collapse:collapse;
+                        border:1px solid #000; margin:14px 0;
                     }
-
                     .items-table th,
                     .items-table td {
-                        border: 1px solid #000;
-                        padding: 8px;
-                        font-size: 12px;
+                        border:1px solid #000; padding:7px 8px;
+                        font-size:12px; text-align:center;
                     }
-
-                    .items-table th {
-                        background-color: #f0f0f0;
-                        font-weight: bold;
-                        text-align: center;
-                    }
-
-                    .items-table td {
-                        text-align: left;
-                    }
-
-                    .items-table .empty-row td {
-                        height: 30px;
-                    }
-
-                    .total-row {
-                        background-color: #f0f0f0;
-                    }
-
-                    .total-row .total-label {
-                        text-align: right;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
-
-                    .total-row .total-amount {
-                        text-align: right;
-                        font-weight: bold;
-                        font-size: 14px;
-                    }
+                    .items-table th { background:#e8e8e8; font-weight:bold; }
+                    .total-row td { background:#e8e8e8; font-weight:bold; font-size:13px; }
 
                     .amount-words {
-                        margin: 20px 0;
+                        padding:10px 30px; border-top:1px solid #ccc;
+                        font-size:13px; line-height:1.8;
                     }
 
-                    .amount-words p {
-                        margin: 8px 0;
-                        font-size: 13px;
-                    }
-
-                    .payment-details {
-                        margin: 30px 0;
-                    }
-
-                    .payment-details h3 {
-                        font-size: 14px;
-                        font-weight: bold;
-                        margin-bottom: 10px;
-                    }
-
-                    .payment-table {
-                        width: 100%;
-                    }
-
-                    .payment-table td {
-                        padding: 4px 0;
-                        font-size: 13px;
-                    }
-
-                    .payment-label {
-                        width: 150px;
-                        font-weight: bold;
-                    }
-
-                    .payment-colon {
-                        width: 20px;
-                    }
+                    .payment-section { padding:12px 30px; border-top:1px solid #ccc; }
+                    .payment-section h3 { font-size:13px; font-weight:bold; margin-bottom:8px; }
+                    .pay-table { width:100%; border-collapse:collapse; }
+                    .pay-table td { padding:3px 0; font-size:13px; }
+                    .pay-lbl { width:160px; font-weight:bold; }
+                    .pay-col { width:18px; }
 
                     .signature-section {
-                        margin-top: 80px;
-                    }
-
-                    .signature-section p {
-                        font-weight: bold;
-                        font-size: 13px;
+                        padding:60px 30px 24px; border-top:1px solid #ccc;
+                        text-align:right; font-weight:bold; font-size:13px;
                     }
 
                     @media print {
-                        body {
-                            padding: 20px;
-                        }
-
-                        .print-controls {
-                            display: none !important;
-                        }
-
-                        .invoice-container {
-                            border: 2px solid #000;
-                            padding: 20px;
-                        }
-
-                        .items-table th {
-                            background-color: #f0f0f0 !important;
-                            -webkit-print-color-adjust: exact;
-                            print-color-adjust: exact;
-                        }
-
-                        .total-row {
-                            background-color: #f0f0f0 !important;
-                            -webkit-print-color-adjust: exact;
-                            print-color-adjust: exact;
-                        }
-
-                        @page {
-                            margin: 0.5cm;
-                            size: A4 portrait;
-                        }
+                        body { padding:10px; }
+                        .print-controls { display:none !important; }
+                        .items-table th,
+                        .total-row { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+                        @page { margin:0.5cm; size:A4 portrait; }
                     }
                 </style>
             </head>
             <body>
-                <!-- Print Controls -->
                 <div class="print-controls">
-                    <button class="btn-print" onclick="window.print()"> Print Invoice</button>
-                    <button class="btn-download" onclick="window.print()">Download PDF</button>
-                    <button class="btn-close" onclick="window.close()">✖ Close</button>
+                    <button class="btn-print" onclick="window.print()">🖨 Print Invoice</button>
+                    <button class="btn-close"  onclick="window.close()">✖ Close</button>
                 </div>
 
-                <!-- Invoice Content -->
-                <div class="invoice-container">
-                    <!-- Header -->
-                    <div class="invoice-header">
-                        <h1>BILL</h1>
+                <div class="invoice-wrapper">
+
+                    <!-- ✅ Logo centered inside top border -->
+                    <div class="company-header">
+                        ${logoHtml}
+                        <div class="company-name">${COMPANY.name}</div>
                     </div>
 
-                    <!-- Consignee Details -->
-                    <table class="info-table">
-                        <tbody>
-                            <tr>
-                                <td class="label">Consignee</td>
-                                <td class="colon">:</td>
-                                <td class="value">${invoice.client.name}</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Address</td>
-                                <td class="colon">:</td>
-                                <td class="value">${invoice.client.address || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Date</td>
-                                <td class="colon">:</td>
-                                <td class="value">${dayjs(invoice.createdAt).format("DD.MM.YYYY")}</td>
-                            </tr>
-                            <tr>
-                                <td class="label">Bill No</td>
-                                <td class="colon">:</td>
-                                <td class="value">${invoice.invoiceNo}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="invoice-title">BILL</div>
 
-                    <!-- Items Table -->
-                    <table class="items-table">
-                        <thead>
-                            <tr>
-                                <th>PI NO</th>
-                                <th>DO NO</th>
-                                <th>DELIVERY DATE</th>
-                                <th>ARTICLE</th>
-                                <th>COLOR</th>
-                                <th>QUANTITY</th>
-                                <th>UNIT PRICE</th>
-                                <th>AMOUNT</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                            ${emptyRowsHtml}
-                            <tr class="total-row">
-                                <td colspan="7" class="total-label">TOTAL=</td>
-                                <td class="total-amount">${invoice.totalAmount.toFixed(2)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Amount in Words -->
-                    <div class="amount-words">
-                        <p><strong>Total Amount = TK. ${invoice.totalAmount.toLocaleString()}/=</strong> (${numberToWords(invoice.totalAmount)} Taka Only).</p>
-                        <p>Payment will be made by local currency.</p>
-                    </div>
-
-                    <!-- Payment Details -->
-                    <div class="payment-details">
-                        <h3>Payment details:</h3>
-                        <table class="payment-table">
+                    <div class="info-section">
+                        <table class="info-table">
                             <tbody>
                                 <tr>
-                                    <td class="payment-label">A/C Name</td>
-                                    <td class="payment-colon">:</td>
-                                    <td class="payment-value">${invoice.bank.accountName}</td>
+                                    <td class="lbl">Consignee</td>
+                                    <td class="col">:</td>
+                                    <td><strong>${invoice.client.name}</strong></td>
+                                    <td style="width:40px;"></td>
+                                    <td class="lbl">Invoice No</td>
+                                    <td class="col">:</td>
+                                    <td>${invoice.invoiceNo}</td>
                                 </tr>
                                 <tr>
-                                    <td class="payment-label">Current Act No</td>
-                                    <td class="payment-colon">:</td>
-                                    <td class="payment-value">${invoice.bank.bankId || 'N/A'}</td>
+                                    <td class="lbl">Address</td>
+                                    <td class="col">:</td>
+                                    <td>${invoice.client.address || 'N/A'}</td>
+                                    <td></td>
+                                    <td class="lbl">Date</td>
+                                    <td class="col">:</td>
+                                    <td>${dayjs(invoice.createdAt).format("DD.MM.YYYY")}</td>
                                 </tr>
                                 <tr>
-                                    <td class="payment-label">Branch Name</td>
-                                    <td class="payment-colon">:</td>
-                                    <td class="payment-value">${invoice.bank.branchName}</td>
-                                </tr>
-                                <tr>
-                                    <td class="payment-label">Bank</td>
-                                    <td class="payment-colon">:</td>
-                                    <td class="payment-value">${invoice.bank.name}</td>
+                                    <td class="lbl">Contact</td>
+                                    <td class="col">:</td>
+                                    <td>${invoice.client.contactNo || 'N/A'}</td>
+                                    <td></td>
+                                    <td class="lbl">Currency</td>
+                                    <td class="col">:</td>
+                                    <td>${invoice.currency.name}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Signature -->
+                    <div class="items-section">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>ARTICLE</th>
+                                    <th>COLOR</th>
+                                    <th>GSM</th>
+                                    <th>WIDTH</th>
+                                    <th>UNIT</th>
+                                    <th>QTY</th>
+                                    <th>UNIT PRICE</th>
+                                    <th>COMMISSION</th>
+                                    <th>AMOUNT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                                <tr class="total-row">
+                                    <td colspan="5" style="text-align:right;">TOTAL</td>
+                                    <td>${invoice.totalQty}</td>
+                                    <td></td>
+                                    <td>${sym}${invoice.totalCommissionAmount.toFixed(2)}</td>
+                                    <td>${sym}${invoice.totalAmount.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="amount-words">
+                        <p><strong>Total Amount = ${sym} ${invoice.totalAmount.toLocaleString()}/=</strong></p>
+                        <p><em>(${numberToWords(invoice.totalAmount)})</em></p>
+                        <p style="margin-top:6px;">Payment will be made by local currency.</p>
+                    </div>
+
+                    <div class="payment-section">
+                        <h3>Payment Details:</h3>
+                        <table class="pay-table">
+                            <tbody>
+                                <tr>
+                                    <td class="pay-lbl">A/C Name</td>
+                                    <td class="pay-col">:</td>
+                                    <td>${invoice.bank.accountName}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pay-lbl">Bank</td>
+                                    <td class="pay-col">:</td>
+                                    <td>${invoice.bank.name}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pay-lbl">Branch Name</td>
+                                    <td class="pay-col">:</td>
+                                    <td>${invoice.bank.branchName}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pay-lbl">Payment Method</td>
+                                    <td class="pay-col">:</td>
+                                    <td>${invoice.payment.name} (${invoice.payment.type})</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                     <div class="signature-section">
-                        <p>Authorized Signatory</p>
+                        Authorized Signatory
                     </div>
                 </div>
             </body>
@@ -408,25 +321,23 @@ const InvoicePrintModal = ({ invoice, open, onClose }: InvoicePrintModalProps) =
             title={
                 <div style={{ fontSize: "18px", fontWeight: "600", color: "#2D3748" }}>
                     <PrinterOutlined style={{ marginRight: "8px", color: "#667eea" }} />
-                    Print Invoice
+                    Print Invoice — {invoice.invoiceNo}
                 </div>
             }
             open={open}
             onCancel={onClose}
             footer={null}
-            width={400}
+            width={420}
             closeIcon={<CloseOutlined />}
         >
-            <div style={{ padding: "20px 0" }}>
-                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-                    Invoice: <strong>{invoice.invoiceNo}</strong>
-                </p>
-                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-                    Client: <strong>{invoice.client.name}</strong>
-                </p>
-                <p style={{ marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-                    Amount: <strong>TK. {invoice.totalAmount.toLocaleString()}</strong>
-                </p>
+            <div style={{ padding: "16px 0" }}>
+                <div style={{ background: "#F7FAFC", borderRadius: 8, padding: "16px", marginBottom: 20, fontSize: 13, lineHeight: 2 }}>
+                    <div>Client: <strong>{invoice.client.name}</strong></div>
+                    <div>Date: <strong>{dayjs(invoice.createdAt).format("DD MMM YYYY")}</strong></div>
+                    <div>Items: <strong>{invoice.items.length}</strong></div>
+                    <div>Total Qty: <strong>{invoice.totalQty}</strong></div>
+                    <div>Amount: <strong>{sym}{invoice.totalAmount.toLocaleString()}</strong></div>
+                </div>
 
                 <Space direction="vertical" style={{ width: "100%" }}>
                     <Button
@@ -439,18 +350,12 @@ const InvoicePrintModal = ({ invoice, open, onClose }: InvoicePrintModalProps) =
                             background: "linear-gradient(to right, #667eea, #764ba2)",
                             border: "none",
                             height: "50px",
-                            fontSize: "16px"
+                            fontSize: "15px",
                         }}
                     >
                         Open Print Window
                     </Button>
-
-                    <Button
-                        onClick={onClose}
-                        size="large"
-                        block
-                        style={{ height: "45px" }}
-                    >
+                    <Button onClick={onClose} size="large" block style={{ height: "44px" }}>
                         Cancel
                     </Button>
                 </Space>

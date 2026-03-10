@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { generateNextId } from '../utils/generate-id.util';
 
 @Schema({ timestamps: true })
 export class PurchaseItemInfo extends Document {
     @Prop({ unique: true, })
     purchaseItemId: string; // Auto-generated: PII-00001
 
-    @Prop({ required: true, trim: true, unique: true })
+    @Prop({ required: true, trim: true })
     articleNo: string; // Article number (e.g., ART-2024-001)
 
     @Prop({ type: Types.ObjectId, ref: 'Color', required: true })
@@ -14,6 +15,9 @@ export class PurchaseItemInfo extends Document {
 
     @Prop({ type: Types.ObjectId, ref: 'Unit', required: true })
     unitId: Types.ObjectId;
+
+    @Prop({ type: Types.ObjectId, ref: "Width", required: true })
+    widthId: Types.ObjectId;
 
     @Prop({ type: Types.ObjectId, ref: 'GSM', required: true })
     gsmId: Types.ObjectId;
@@ -30,8 +34,14 @@ export const PurchaseItemInfoSchema = SchemaFactory.createForClass(PurchaseItemI
 // Pre-save hook to generate purchaseItemId
 PurchaseItemInfoSchema.pre('save', async function () {
     if (!this.purchaseItemId) {
-        const count = await this.model('PurchaseItemInfo').countDocuments();
-        this.purchaseItemId = `PII-${String(count + 1).padStart(5, '0')}`;
+
+        this.purchaseItemId = await generateNextId(
+            this.model('PurchaseItemInfo'),
+            'purchaseItemId',
+            'PII',
+        );
+        // const count = await this.model('PurchaseItemInfo').countDocuments();
+        // this.purchaseItemId = `PII-${String(count + 2).padStart(5, '0')}`;
     }
     // next();
 });

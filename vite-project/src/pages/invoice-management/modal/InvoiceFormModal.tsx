@@ -3,10 +3,10 @@ import { Modal, Form, Input, Select, Button, message, Divider } from "antd";
 import { PlusOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { CreateInvoiceDto, Invoice, InvoiceItemDto } from "../../../api/services/invoice/invoiceApi";
 import type { Client } from "../../../api/services/client/clientApi";
+import type { Supplier } from "../../../api/services/supplier/supplierApi";
 import type { CurrencyInfo } from "../../../api/services/currency/currencyInfoApi";
 import type { PaymentInfo } from "../../../api/services/payment-info/paymentInfoApi";
 import type { BankInfo } from "../../../api/services/bank-info/bankInfoApi";
-import type { SupplierPurchasePriceList } from "../../../api/services/supplier-purchase-price/SupplierpurchasepricelistApi";
 import type { FinishGoods } from "../../../api/services/finish-goods/finishGoodsApi";
 import InvoiceItemRow from "../row/InvoiceItemRow";
 import { getCurrencyConfig } from "../../../utils/currencyUtils";
@@ -15,11 +15,11 @@ interface InvoiceFormModalProps {
     open: boolean;
     editingInvoice: Invoice | null;
     clients: Client[];
+    suppliers: Supplier[]; // ✅ Added suppliers
     currencies: CurrencyInfo[];
     payments: PaymentInfo[];
     banks: BankInfo[];
     finishGoods: FinishGoods[];
-    priceLists: SupplierPurchasePriceList[];
     isCreating: boolean;
     isUpdating: boolean;
     onSubmit: (values: CreateInvoiceDto) => void;
@@ -30,11 +30,11 @@ const InvoiceFormModal = ({
     open,
     editingInvoice,
     clients,
+    suppliers, // ✅ Receive suppliers
     currencies,
     payments,
     banks,
     finishGoods,
-    priceLists,
     isCreating,
     isUpdating,
     onSubmit,
@@ -138,7 +138,7 @@ const InvoiceFormModal = ({
                 open={open}
                 onCancel={onCancel}
                 footer={null}
-                width={1200}
+                width={1400}
                 style={{ top: 20 }}
                 className="invoice-form-modal"
             >
@@ -147,14 +147,6 @@ const InvoiceFormModal = ({
                     <div className="invoice-header-section">
                         <h4>Invoice Header</h4>
                         <div className="header-grid">
-                            {/* <Form.Item
-                                label={<span style={{ fontWeight: "500" }}>Invoice No</span>}
-                                name="invoiceNo"
-                                rules={[{ required: true, message: "Required" }]}
-                                style={{ marginBottom: 0 }}
-                            >
-                                <Input placeholder="INV-2024-001" style={{ height: "42px" }} />
-                            </Form.Item> */}
                             <Form.Item
                                 label={<span style={{ fontWeight: "500" }}>Client</span>}
                                 name="clientId"
@@ -225,6 +217,7 @@ const InvoiceFormModal = ({
                         {/* Column Headers */}
                         <div className="items-column-headers">
                             <div>Finish Good</div>
+                            <div>Supplier</div>
                             <div>Price List</div>
                             <div>Qty</div>
                             <div>Unit Price</div>
@@ -242,10 +235,11 @@ const InvoiceFormModal = ({
                                     item={item}
                                     index={index}
                                     finishGoods={finishGoods}
-                                    priceLists={priceLists}
+                                    suppliers={suppliers} // ✅ Pass suppliers
                                     onChange={handleItemChange}
                                     onDelete={handleDeleteItem}
                                     currencyName={selectedCurrency?.name ?? ""}
+                                    toCurrencyId={selectedCurrency?._id || ""}
                                 />
                             ))}
                         </div>
@@ -265,12 +259,10 @@ const InvoiceFormModal = ({
                                 </div>
                                 <div className="total-item">
                                     <div className="total-label">Total Commission</div>
-                                    {/* ✅ Uses selected currency icon */}
                                     <div className="total-value">{currencyIcon} {totalCommission.toFixed(2)}</div>
                                 </div>
                                 <div className="total-item">
                                     <div className="total-label">Total Amount</div>
-                                    {/* ✅ Uses selected currency icon */}
                                     <div className="total-value total-amount">{currencyIcon} {totalAmount.toFixed(2)}</div>
                                 </div>
                             </div>
@@ -299,12 +291,12 @@ const InvoiceFormModal = ({
                 .invoice-modal-title { font-size: 18px; font-weight: 600; color: #2D3748; padding: 10px 0; }
                 .invoice-header-section { background: #F7FAFC; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
                 .invoice-header-section h4 { margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #2D3748; }
-                .header-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+                .header-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
                 .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
                 .invoice-items-section { margin-bottom: 20px; }
                 .items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
                 .items-header h4 { margin: 0; font-size: 14px; font-weight: 600; color: #2D3748; }
-                .items-column-headers { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr 1.2fr 60px; gap: 10px; padding: 10px 12px; background: #E2E8F0; border-radius: 6px; margin-bottom: 10px; font-size: 12px; font-weight: 600; color: #2D3748; }
+                .items-column-headers { display: grid; grid-template-columns: 1.5fr 1.5fr 2fr 0.8fr 1fr 1fr 1fr 1.2fr 60px; gap: 10px; padding: 10px 12px; background: #E2E8F0; border-radius: 6px; margin-bottom: 10px; font-size: 12px; font-weight: 600; color: #2D3748; }
                 .empty-items { padding: 40px; text-align: center; background: #F7FAFC; border-radius: 6px; color: #718096; }
                 .invoice-totals { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
                 .totals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }

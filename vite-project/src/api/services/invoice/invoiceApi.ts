@@ -1,7 +1,7 @@
 import { baseApi, TAG_TYPES } from "../baseApi";
 
-
 // ─── Nested Types ─────────────────────────────────────────────────────────────
+
 export interface PopulatedClient {
     _id: string;
     clientId: string;
@@ -34,20 +34,47 @@ export interface PopulatedBank {
     code: string;
 }
 
+// ✅ Fully populated FinishGoods — includes color, unit, gsm objects
 export interface PopulatedFinishGoods {
     _id: string;
     finishGoodsId: string;
     articleNo: string;
-    colorId: { colorId: string; name: string; type: string };
-    unitId: { unitId: string; name: string };
-    gsmId: { gsmId: string; name: string };
+    colorId: {
+        _id: string;
+        colorId: string;
+        name: string;
+        type?: string;
+    };
+    unitId: {
+        _id: string;
+        unitId: string;
+        name: string;
+    };
+    gsmId: {
+        _id: string;
+        gsmId: string;
+        name: string;
+        value?: number;
+    };
+    widthId?: { _id: string; widthId: string; name: string; value?: number }; // if width is a ref
+    width?: number;   // if width is a plain number on FinishGoods
+    description?: string;
 }
 
 export interface PopulatedPriceList {
     _id: string;
     priceListId: string;
     purchaseRate: number;
-    supplierId: { supplierId: string; supplierName: string };
+    commission?: number;
+    supplierId: {
+        _id: string;
+        supplierId: string;
+        supplierName: string;
+    };
+    currencyId?: {
+        _id: string;
+        name: string;
+    };
 }
 
 export interface InvoiceItem {
@@ -55,17 +82,14 @@ export interface InvoiceItem {
     invoiceId: string;
     finishGoodsId: string;
     supplierPurchasePriceId: string;
-    finishGoods: PopulatedFinishGoods;
+    finishGoods: PopulatedFinishGoods;   // ✅ now has .colorId, .unitId, .gsmId as objects
     priceList: PopulatedPriceList;
     invoiceQty: number;
     unitPrice: number;
     commission: number;
     price: number;
-    currencyId: {
-        _id: string;
-        name: string
-    } | string
     amount: number;
+    currencyId: { _id: string; name: string } | string;
 }
 
 export interface Invoice {
@@ -84,13 +108,13 @@ export interface Invoice {
     totalQty: number;
     totalAmount: number;
     totalCommissionAmount: number;
-
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
 }
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
+
 export interface InvoiceItemDto {
     finishGoodsId: string;
     supplierPurchasePriceId: string;
@@ -99,10 +123,7 @@ export interface InvoiceItemDto {
     commission: number;
     price: number;
     amount: number;
-    currencyId: {
-        _id: string;
-        name: string
-    }
+    currencyId: { _id: string; name: string };
 }
 
 export interface CreateInvoiceDto {
@@ -126,6 +147,7 @@ export interface UpdateInvoiceDto {
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
+
 export const invoiceApi = baseApi.injectEndpoints({
     endpoints: (build) => ({
         getAllInvoices: build.query<Invoice[], void>({

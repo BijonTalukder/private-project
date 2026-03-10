@@ -80,12 +80,23 @@ export const currencyConversionApi = baseApi.injectEndpoints({
         }),
 
         // Get conversion rate between two currencies
-        getConversionRate: builder.query<CurrencyConversion, { from: string; to: string }>({
+        getConversionRate: builder.query<CurrencyConversion | null, { from: string; to: string }>({
             query: ({ from, to }) => ({
                 url: `/admin/currency-conversion/rate?from=${from}&to=${to}`,
                 method: "GET"
             }),
             providesTags: ['CurrencyConversion'],
+            // ✅ Transform response to handle errors gracefully
+            transformResponse: (response: CurrencyConversion) => {
+                return response;
+            },
+            // ✅ Handle query errors (like 404 when no rate found)
+            transformErrorResponse: (response: any) => {
+                console.log('Conversion rate error:', response);
+                return null;
+            },
+            // ✅ Keep failed queries in cache as null
+            keepUnusedDataFor: 60, // Cache for 60 seconds
         }),
 
         // Get conversion by ID
